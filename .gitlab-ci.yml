@@ -1,0 +1,50 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  CONTAINER_IMAGE: registry.ddex.io/ddex/ethereum-jsonrpc-gateway:$CI_COMMIT_SHA
+
+build:
+  tags:
+    - docker
+  image: docker:git
+  services:
+    - docker:dind
+  stage: build
+  script:
+    - docker build -t $CONTAINER_IMAGE .
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN https://registry.ddex.io
+    - docker push $CONTAINER_IMAGE
+  only:
+    - sandbox
+    - master
+
+deploy_ropsten:
+  tags:
+    - docker
+  image: davidqhr/k8s-kubectl:latest
+  variables:
+    KUBECONFIG: /root/.kube-hp/config
+  stage: deploy
+  script:
+    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .kube.yml
+    - kubectl apply -f .kube.yml --namespace=sandbox
+  only:
+    - sandbox
+
+deploy_production:
+  tags:
+    - docker
+  image: davidqhr/k8s-kubectl:latest
+  variables:
+    KUBECONFIG: /root/.kube-hp/config
+  stage: deploy
+  script:
+    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .kube.yml
+    - kubectl apply -f .kube.yml --namespace=sandbox
+    - kubectl apply -f .kube.yml --namespace=production
+  only:
+    - master
+  when: manual

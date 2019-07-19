@@ -1,0 +1,49 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  labels:
+    app: ethereum-jsonrpc-gateway
+  name: ethereum-jsonrpc-gateway
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: ethereum-jsonrpc-gateway
+  template:
+    metadata:
+      name: ethereum-jsonrpc-gateway
+      labels:
+        app: ethereum-jsonrpc-gateway
+    spec:
+      terminationGracePeriodSeconds: 10
+      nodeSelector:
+        kops.k8s.io/instancegroup: nodes
+      containers:
+      - name: ethereum-jsonrpc-gateway
+        image: <IMAGE>
+        ports:
+        - name: prom-port
+          containerPort: 9091
+        env:
+        - name: UPSTREAMS
+          valueFrom:
+            secretKeyRef:
+              name: common-envs
+              key: UPSTREAMS
+        imagePullPolicy: Always
+      imagePullSecrets:
+      - name: docker-registry-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ethereum-jsonrpc-gateway
+spec:
+  selector:
+    app: ethereum-jsonrpc-gateway
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 3000
