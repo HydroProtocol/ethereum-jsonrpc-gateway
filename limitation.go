@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
+	"os"
 	"strings"
 )
 
@@ -22,10 +23,15 @@ type RequestData struct {
 //eth_getStorageAt
 //eth_getTransactionCount
 
-var allowCallContracts = map[string]bool{
-	"0xac34923b2b8de9d441570376e6c811d5aa5ed72f": true, // hydro
-	"0x16c4f3dcfcc23faa9fc8e3e849bdf966953bee91": true,
-	"0x0d61b376b2630e35809fac1d531d36c2c09c68dc": true,
+var allowCallContracts map[string]bool
+
+func initLimitation() {
+	allowCallContracts = make(map[string]bool)
+	contractAddresses := strings.Split(os.Getenv("LIMITATION_CONTRACT_WHITELIST"), ",")
+
+	for i := 0; i < len(contractAddresses); i++ {
+		allowCallContracts[contractAddresses[i]] = true
+	}
 }
 
 var DecodeError = fmt.Errorf("decode error")

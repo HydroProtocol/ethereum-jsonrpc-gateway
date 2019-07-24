@@ -1,4 +1,4 @@
-FROM golang:1.10.1-stretch
+FROM golang:1.12
 
 WORKDIR /go/src/ddex/ethereum-jsonrpc-gateway
 COPY . /go/src/ddex/ethereum-jsonrpc-gateway

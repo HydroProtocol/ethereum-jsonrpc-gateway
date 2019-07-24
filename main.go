@@ -1,19 +1,22 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/sirupsen/logrus"
+	"os/signal"
+	"strings"
+	"syscall"
 )
 
 import (
-	"bytes"
-	"github.com/TV4/graceful"
-	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -41,33 +44,83 @@ func createHTTPClient() *http.Client {
 
 type Server struct{}
 
-var upstreams = strings.Split(os.Getenv("UPSTREAMS"), ",")
+var upstreams []Upstream
+var strategy IStrategy
+var methodLimitation = os.Getenv("LIMITATION") == "true"
 
-func pipeRes(rw http.ResponseWriter, res *http.Response) {
-	rw.WriteHeader(res.StatusCode)
-	rw.Header().Set("Content-Type", res.Header.Get("Content-Type"))
-	rw.Header().Set("Content-Length", res.Header.Get("Content-Length"))
-	_, _ = io.Copy(rw, res.Body)
-	_ = res.Body.Close()
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true // kong should take care of cors
+	},
 }
 
-func timeout(w http.ResponseWriter) {
-	w.WriteHeader(504)
-}
+func (h *Server) ServerWS(conn *websocket.Conn) error {
+	defer conn.Close()
 
-func peekResponseBody(res *http.Response) []byte {
-	buf, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+	for {
+		messageType, r, err := conn.NextReader()
+		if err != nil {
+			return err
+		}
+
+		w, err := conn.NextWriter(messageType)
+
+		if err != nil {
+			return err
+		}
+
+		reqBodyBytes, _ := ioutil.ReadAll(r)
+		proxyRequest, err := newRequest(reqBodyBytes)
+
+		if err != nil {
+			return err
+		}
+
+		bts, err := strategy.handle(proxyRequest)
+
+		if err != nil {
+			bts = getErrorResponseBytes(proxyRequest.data.ID, err.Error())
+		}
+
+		if _, err := w.Write(bts); err != nil {
+			return err
+		}
+
+		if err := w.Close(); err != nil {
+			return err
+		}
 	}
+}
 
-	res.Body = ioutil.NopCloser(bytes.NewReader(buf))
-	return buf
+func getErrorResponseBytes(id interface{}, reason interface{}) []byte {
+	bts, _ := json.Marshal(map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"error": map[string]interface{}{
+			"code":    -32602,
+			"message": reason,
+		},
+	})
+
+	return bts
 }
 
 func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if req.URL.Path == "/ws" {
+		conn, err := upgrader.Upgrade(w, req, nil)
+
+		if err != nil {
+			logrus.Error(err)
+			return
+		}
+
+		_ = h.ServerWS(conn)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 	if req.Method == http.MethodOptions {
@@ -81,44 +134,125 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	proxyRequest := newRequest(req, w)
-	err := proxyRequest.valid()
+	reqBodyBytes, _ := ioutil.ReadAll(req.Body)
+	proxyRequest, err := newRequest(reqBodyBytes)
 
 	if err != nil {
-		proxyRequest.returnError(err.Error())
+		w.WriteHeader(500)
+		_, _ = w.Write(getErrorResponseBytes(proxyRequest.data.ID, err.Error()))
 		return
 	}
 
-	upstreamsCount := len(upstreams)
-
-	if upstreamsCount == 1 {
-		err = proxyRequest.naiveProxy()
-	} else {
-		err = proxyRequest.raceProxy()
-	}
+	bts, err := strategy.handle(proxyRequest)
 
 	if err != nil {
-		proxyRequest.returnError(err.Error())
+		w.WriteHeader(500)
+		_, _ = w.Write(getErrorResponseBytes(proxyRequest.data.ID, err.Error()))
+		return
 	}
 
+	_, _ = w.Write(bts)
 }
 
-func main() {
+func initialize(ctx context.Context) {
+	for _, url := range strings.Split(os.Getenv("UPSTREAMS"), ",") {
+		upstreams = append(upstreams, newUpstream(ctx, url))
+	}
+
 	if len(upstreams) == 0 {
 		panic("need upstreams")
 	}
 
+	s := os.Getenv("STRATEGY")
+	switch s {
+	case "NAIVE":
+		if len(upstreams) > 1 {
+			panic(fmt.Errorf("naive proxy strategy require exact 1 upstream"))
+		}
+		strategy = newNaiveProxy()
+	case "RACE":
+		if len(upstreams) < 2 {
+			panic(fmt.Errorf("race proxy strategy require more than 1 upstream"))
+		}
+		strategy = newRaceProxy()
+	case "FALLBACK":
+		if len(upstreams) < 2 {
+			panic(fmt.Errorf("fallback proxy strategy require more than 1 upstream"))
+		}
+		strategy = newFallbackProxy()
+	default:
+		panic(fmt.Errorf("blank of unsupported strategy: %s", s))
+	}
+
+	initLimitation()
+}
+
+func setLogLevel() {
+	var level logrus.Level
+
+	switch os.Getenv("LOG_LEVEL") {
+	case "DEBUG":
+		level = logrus.DebugLevel
+	case "ERROR":
+		level = logrus.ErrorLevel
+	case "FATAL":
+		level = logrus.FatalLevel
+	case "TRACE":
+		level = logrus.TraceLevel
+	case "PANIC":
+		level = logrus.PanicLevel
+	default:
+		level = logrus.InfoLevel
+	}
+	logrus.SetLevel(level)
+}
+
+func waitExitSignal(ctxStop context.CancelFunc) {
+	var exitSignal = make(chan os.Signal)
+	signal.Notify(exitSignal, syscall.SIGTERM)
+	signal.Notify(exitSignal, syscall.SIGINT)
+
+	<-exitSignal
+	logrus.Info("Stopping...")
+	ctxStop()
+}
+
+func run() int {
+	ctx, stop := context.WithCancel(context.Background())
+	go waitExitSignal(stop)
+
+	setLogLevel()
+	initialize(ctx)
+
 	hs := &http.Server{Addr: ":3005", Handler: &Server{}}
 
-	go graceful.Shutdown(hs)
+	// http server graceful shutdown
+	go func() {
+		<-ctx.Done()
 
-	log.Printf("Listening on http://0.0.0.0%s\n", hs.Addr)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-	//router := httprouter.New()
-	//router.Handler("GET", "/metrics", utils.Monitor.Handler())
-	//go http.ListenAndServe(fmt.Sprintf(":%s", "9091"), router)
+		if err := hs.Shutdown(shutdownCtx); err != nil {
+			logrus.Fatalf("Could not gracefully shutdown the server: %v\n", err)
+		}
+	}()
+
+	logrus.Infof("Listening on http://0.0.0.0%s\n", hs.Addr)
+
+	// TODO monitoring
+	// router := httprouter.New()
+	// router.Handler("GET", "/metrics", utils.Monitor.Handler())
+	// go http.ListenAndServe(fmt.Sprintf(":%s", "9091"), router)
 
 	if err := hs.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
+
+	logrus.Info("Stopped")
+	return 0
+}
+
+func main() {
+	os.Exit(run())
 }
