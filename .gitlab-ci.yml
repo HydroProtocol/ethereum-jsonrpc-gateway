@@ -20,30 +20,15 @@ build:
   only:
     - master
 
-#deploy_ropsten:
-#  tags:
-#    - docker
-#  image: davidqhr/k8s-kubectl:latest
-#  variables:
-#    KUBECONFIG: /root/.kube-hp/config
-#  stage: deploy
-#  script:
-#    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .kube.yml
-#    - kubectl apply -f .kube.yml --namespace=sandbox
-#  only:
-#    - sandbox
-#
-#deploy_production:
-#  tags:
-#    - docker
-#  image: davidqhr/k8s-kubectl:latest
-#  variables:
-#    KUBECONFIG: /root/.kube-hp/config
-#  stage: deploy
-#  script:
-#    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .kube.yml
-#    - kubectl apply -f .kube.yml --namespace=sandbox
-#    - kubectl apply -f .kube.yml --namespace=production
-#  only:
-#    - master
-#  when: manual
+deploy_sandbox:
+  tags:
+    - docker
+  image: davidqhr/k8s-kubectl:latest
+  variables:
+    KUBECONFIG: /root/.kube-hp/config
+  stage: deploy
+  script:
+    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .k8s/*.yml
+    - kubectl apply -f .k8s --namespace=sandbox
+  only:
+    - master
