@@ -10,6 +10,7 @@ A transparent ethereum jsonrpc gateway
 - http upstream
 - websocket upstream
 - websocket upstream reconnect
+- hot reload config
 - graceful shutdown
 
 
@@ -33,4 +34,4 @@ Fallback strategy proxy will retry failed request in other upstreams.
 
 ## config
 
-see .env-sample file
+see config.sample.json file
