@@ -3,3 +3,4 @@ config.json
 bin
 .cover
 .idea
+.vscode
