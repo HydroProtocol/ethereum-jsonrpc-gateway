@@ -4,19 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"git.ddex.io/lib/hotconfig"
+	"git.ddex.io/lib/log"
 	"github.com/gorilla/websocket"
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/sirupsen/logrus"
-	"os/signal"
-	"strings"
-	"syscall"
-)
-
-import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -44,9 +41,23 @@ func createHTTPClient() *http.Client {
 
 type Server struct{}
 
-var upstreams []Upstream
-var strategy IStrategy
-var methodLimitation = os.Getenv("LIMITATION") == "true"
+type Config struct {
+	Upstreams               []string `json:"upstreams"`
+	Strategy                string   `json:"strategy"`
+	MethodLimitationEnabled bool     `json:"method_limitation_enabled"`
+	ContractWhitelist       []string `json:"contract_whitelist"`
+}
+
+type RunningConfig struct {
+	ctx                     context.Context
+	stop                    context.CancelFunc
+	Upstreams               []Upstream
+	Strategy                IStrategy
+	MethodLimitationEnabled bool
+	allowCallContracts      map[string]bool
+}
+
+var currentRunningConfig *RunningConfig
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -78,7 +89,7 @@ func (h *Server) ServerWS(conn *websocket.Conn) error {
 			return err
 		}
 
-		bts, err := strategy.handle(proxyRequest)
+		bts, err := currentRunningConfig.Strategy.handle(proxyRequest)
 
 		if err != nil {
 			bts = getErrorResponseBytes(proxyRequest.data.ID, err.Error())
@@ -143,7 +154,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	bts, err := strategy.handle(proxyRequest)
+	bts, err := currentRunningConfig.Strategy.handle(proxyRequest)
 
 	if err != nil {
 		w.WriteHeader(500)
@@ -154,57 +165,49 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	_, _ = w.Write(bts)
 }
 
-func initialize(ctx context.Context) {
-	for _, url := range strings.Split(os.Getenv("UPSTREAMS"), ",") {
-		upstreams = append(upstreams, newUpstream(ctx, url))
+func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {
+	ctx, stop := context.WithCancel(parentContext)
+
+	rcfg := &RunningConfig{
+		ctx:  ctx,
+		stop: stop,
 	}
 
-	if len(upstreams) == 0 {
-		panic("need upstreams")
+	for _, url := range cfg.Upstreams {
+		rcfg.Upstreams = append(rcfg.Upstreams, newUpstream(ctx, url))
 	}
 
-	s := os.Getenv("STRATEGY")
-	switch s {
+	if len(rcfg.Upstreams) == 0 {
+		return nil, fmt.Errorf("need upstreams")
+	}
+
+	switch cfg.Strategy {
 	case "NAIVE":
-		if len(upstreams) > 1 {
+		if len(rcfg.Upstreams) > 1 {
 			panic(fmt.Errorf("naive proxy strategy require exact 1 upstream"))
 		}
-		strategy = newNaiveProxy()
+		rcfg.Strategy = newNaiveProxy()
 	case "RACE":
-		if len(upstreams) < 2 {
+		if len(rcfg.Upstreams) < 2 {
 			panic(fmt.Errorf("race proxy strategy require more than 1 upstream"))
 		}
-		strategy = newRaceProxy()
+		rcfg.Strategy = newRaceProxy()
 	case "FALLBACK":
-		if len(upstreams) < 2 {
+		if len(rcfg.Upstreams) < 2 {
 			panic(fmt.Errorf("fallback proxy strategy require more than 1 upstream"))
 		}
-		strategy = newFallbackProxy()
+		rcfg.Strategy = newFallbackProxy()
 	default:
-		panic(fmt.Errorf("blank of unsupported strategy: %s", s))
+		return nil, fmt.Errorf("blank of unsupported strategy: %s", cfg.Strategy)
 	}
 
-	initLimitation()
-}
+	rcfg.allowCallContracts = make(map[string]bool)
 
-func setLogLevel() {
-	var level logrus.Level
-
-	switch os.Getenv("LOG_LEVEL") {
-	case "DEBUG":
-		level = logrus.DebugLevel
-	case "ERROR":
-		level = logrus.ErrorLevel
-	case "FATAL":
-		level = logrus.FatalLevel
-	case "TRACE":
-		level = logrus.TraceLevel
-	case "PANIC":
-		level = logrus.PanicLevel
-	default:
-		level = logrus.InfoLevel
+	for i := 0; i < len(cfg.ContractWhitelist); i++ {
+		rcfg.allowCallContracts[cfg.ContractWhitelist[i]] = true
 	}
-	logrus.SetLevel(level)
+
+	return rcfg, nil
 }
 
 func waitExitSignal(ctxStop context.CancelFunc) {
@@ -213,16 +216,69 @@ func waitExitSignal(ctxStop context.CancelFunc) {
 	signal.Notify(exitSignal, syscall.SIGINT)
 
 	<-exitSignal
+
 	logrus.Info("Stopping...")
 	ctxStop()
 }
 
 func run() int {
+	log.AutoSetLogLevel()
+
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)
 
-	setLogLevel()
-	initialize(ctx)
+	config := &Config{}
+
+	if os.Getenv("KUBE_NAMESPACE") != "" {
+		logrus.Info("load config from ETCD")
+		hotconfig.Load(config, &hotconfig.Options{
+			Watch:   true,
+			Context: ctx,
+			OnChange: func() {
+				oldRunningConfig := currentRunningConfig
+				newRcfg, err := buildRunningConfigFromConfig(ctx, config)
+
+				if err == nil {
+					currentRunningConfig = newRcfg
+					oldRunningConfig.stop()
+					logrus.Info("running config changes successfully")
+				} else {
+					logrus.Info("running config changes failed, err: %+v", err)
+				}
+			},
+		})
+	} else {
+		logrus.Info("load config from file")
+		bts, err := ioutil.ReadFile("./config.json")
+
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		_ = json.Unmarshal(bts, config)
+	}
+	var err error
+	currentRunningConfig, err = buildRunningConfigFromConfig(ctx, config)
+
+	// test reload config
+	//go func() {
+	//	time.Sleep(5 * time.Second)
+	//
+	//	oldRunningConfig := currentRunningConfig
+	//	newRcfg, err := buildRunningConfigFromConfig(ctx, config)
+	//
+	//	if err == nil {
+	//		currentRunningConfig = newRcfg
+	//		oldRunningConfig.stop()
+	//		logrus.Info("running config changes successfully")
+	//	} else {
+	//		logrus.Info("running config changes failed, err: %+v", err)
+	//	}
+	//}()
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	hs := &http.Server{Addr: ":3005", Handler: &Server{}}
 

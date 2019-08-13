@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
-	"os"
 	"strings"
 )
 
@@ -23,22 +22,11 @@ type RequestData struct {
 //eth_getStorageAt
 //eth_getTransactionCount
 
-var allowCallContracts map[string]bool
-
-func initLimitation() {
-	allowCallContracts = make(map[string]bool)
-	contractAddresses := strings.Split(os.Getenv("LIMITATION_CONTRACT_WHITELIST"), ",")
-
-	for i := 0; i < len(contractAddresses); i++ {
-		allowCallContracts[contractAddresses[i]] = true
-	}
-}
-
 var DecodeError = fmt.Errorf("decode error")
 var Denied = fmt.Errorf("not allowed method")
 
 func inWhitelist(contractAddress string) bool {
-	return allowCallContracts[strings.ToLower(contractAddress)]
+	return currentRunningConfig.allowCallContracts[strings.ToLower(contractAddress)]
 }
 
 func isValidCall(req *RequestData) (err error) {

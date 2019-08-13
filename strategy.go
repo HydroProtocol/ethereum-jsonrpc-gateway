@@ -14,9 +14,9 @@ type IStrategy interface {
 	handle(*Request) ([]byte, error)
 }
 
-var _ IStrategy = newNaiveProxy()
-var _ IStrategy = newRaceProxy()
-var _ IStrategy = newFallbackProxy()
+var _ IStrategy = &NaiveProxy{}
+var _ IStrategy = &RaceProxy{}
+var _ IStrategy = &FallbackProxy{}
 
 type NaiveProxy struct{}
 
@@ -25,7 +25,7 @@ func newNaiveProxy() *NaiveProxy {
 }
 
 func (p *NaiveProxy) handle(req *Request) ([]byte, error) {
-	upstream := upstreams[0]
+	upstream := currentRunningConfig.Upstreams[0]
 	bts, err := upstream.handle(req)
 
 	if err != nil {
@@ -48,11 +48,11 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 		//utils.Monitor.MonitorTime("geth_gateway", float64(time.Since(startAt)) / 1000000)
 	}()
 
-	successfulResponse := make(chan []byte, len(upstreams))
-	failedResponse := make(chan []byte, len(upstreams))
-	errorResponseUpstreams := make(chan Upstream, len(upstreams))
+	successfulResponse := make(chan []byte, len(currentRunningConfig.Upstreams))
+	failedResponse := make(chan []byte, len(currentRunningConfig.Upstreams))
+	errorResponseUpstreams := make(chan Upstream, len(currentRunningConfig.Upstreams))
 
-	for _, upstream := range upstreams {
+	for _, upstream := range currentRunningConfig.Upstreams {
 		go func(upstream Upstream) {
 			defer func() {
 				if err := recover(); err != nil {
@@ -89,7 +89,7 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 
 	errorCount := 0
 
-	for errorCount < len(upstreams) {
+	for errorCount < len(currentRunningConfig.Upstreams) {
 		select {
 		case <-time.After(time.Second * 10):
 			//r.rw.WriteHeader(504)
@@ -127,7 +127,7 @@ func newFallbackProxy() *FallbackProxy {
 		upsteamStatus:        &sync.Map{},
 	}
 
-	for i := 0; i < len(upstreams); i++ {
+	for i := 0; i < len(currentRunningConfig.Upstreams); i++ {
 		p.upsteamStatus.Store(i, true)
 	}
 
@@ -135,17 +135,17 @@ func newFallbackProxy() *FallbackProxy {
 }
 
 func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
-	for i := 0; i < len(upstreams); i++ {
+	for i := 0; i < len(currentRunningConfig.Upstreams); i++ {
 		index := p.currentUpstreamIndex.Load().(int)
 
 		value, _ := p.upsteamStatus.Load(index)
 		isUpstreamValid := value.(bool)
 
 		if isUpstreamValid {
-			bts, err := upstreams[index].handle(req)
+			bts, err := currentRunningConfig.Upstreams[index].handle(req)
 
 			if err != nil {
-				nextUpstreamIndex := int(math.Mod(float64(index+1), float64(len(upstreams))))
+				nextUpstreamIndex := int(math.Mod(float64(index+1), float64(len(currentRunningConfig.Upstreams))))
 				p.currentUpstreamIndex.Store(nextUpstreamIndex)
 				p.upsteamStatus.Store(i, false)
 

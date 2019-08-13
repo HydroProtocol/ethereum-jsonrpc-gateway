@@ -32,17 +32,20 @@ func newRequest(reqBodyBytes []byte) (*Request, error) {
 	}
 
 	// method limit, for directly external access
-	if methodLimitation {
-		err := req.valid()
-		if err != nil {
-			return req, err
-		}
+	err := req.valid()
+
+	if err != nil {
+		return req, err
 	}
 
 	return req, nil
 }
 
 func (r *Request) valid() error {
+
+	if !currentRunningConfig.MethodLimitationEnabled {
+		return nil
+	}
 
 	err := isValidCall(r.data)
 
