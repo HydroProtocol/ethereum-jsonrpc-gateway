@@ -4,7 +4,7 @@
     "http://localhost:8545"
   ],
 
-  "_strategy": "support NAVID, RACE, FALLBACK",
+  "_strategy": "support NAIVE, RACE, FALLBACK",
   "strategy": "NAIVE",
 
   "_method_limitation_enabled": "limit or not",
