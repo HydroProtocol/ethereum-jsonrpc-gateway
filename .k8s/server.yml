@@ -33,10 +33,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            imagePullPolicy: Always
+          imagePullPolicy: Always
       imagePullSecrets:
         - name: docker-registry-secret
-
 ---
 apiVersion: v1
 kind: Service
