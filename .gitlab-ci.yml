@@ -11,7 +11,7 @@ build:
     - docker
   image: docker:git
   services:
-    - docker:dind
+    - docker:18-dind
   stage: build
   script:
     - docker build -t $CONTAINER_IMAGE .
