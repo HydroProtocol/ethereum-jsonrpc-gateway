@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"git.ddex.io/lib/hotconfig"
 	"git.ddex.io/lib/log"
+	"git.ddex.io/lib/monitor"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -67,6 +68,15 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func monitorRequest(r *Request, noError bool) {
+	if noError {
+		monitor.Count("call_ok", r.data.Method)
+	} else {
+		monitor.Count("call_with_error", r.data.Method)
+	}
+
+}
+
 func (h *Server) ServerWS(conn *websocket.Conn) error {
 	defer conn.Close()
 
@@ -94,6 +104,8 @@ func (h *Server) ServerWS(conn *websocket.Conn) error {
 		if err != nil {
 			bts = getErrorResponseBytes(proxyRequest.data.ID, err.Error())
 		}
+
+		monitorRequest(proxyRequest, err == nil)
 
 		if _, err := w.Write(bts); err != nil {
 			return err
@@ -155,6 +167,8 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	bts, err := currentRunningConfig.Strategy.handle(proxyRequest)
+
+	monitorRequest(proxyRequest, err == nil)
 
 	if err != nil {
 		w.WriteHeader(500)
@@ -223,6 +237,7 @@ func waitExitSignal(ctxStop context.CancelFunc) {
 
 func run() int {
 	log.AutoSetLogLevel()
+	monitor.InitCounter("key", "method")
 
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)
@@ -296,10 +311,7 @@ func run() int {
 
 	logrus.Infof("Listening on http://0.0.0.0%s\n", hs.Addr)
 
-	// TODO monitoring
-	// router := httprouter.New()
-	// router.Handler("GET", "/metrics", utils.Monitor.Handler())
-	// go http.ListenAndServe(fmt.Sprintf(":%s", "9091"), router)
+	go monitor.StartMonitorHttpServer(ctx)
 
 	if err := hs.ListenAndServe(); err != http.ErrServerClosed {
 		logrus.Fatal(err)

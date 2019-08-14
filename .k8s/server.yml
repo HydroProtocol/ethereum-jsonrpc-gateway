@@ -23,7 +23,7 @@ spec:
           image: <IMAGE>
           ports:
             - name: prom-port
-              containerPort: 9091
+              containerPort: 9090
           env:
             - name: KUBE_APP_NAME
               valueFrom:

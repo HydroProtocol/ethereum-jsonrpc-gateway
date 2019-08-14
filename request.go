@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"git.ddex.io/lib/monitor"
 	"log"
 	"os"
 )
@@ -51,7 +52,7 @@ func (r *Request) valid() error {
 
 	if err != nil {
 		r.logger.Printf("not valid, skip\n")
-
+		monitor.Count("block_call", r.data.Method)
 		return err
 	}
 
