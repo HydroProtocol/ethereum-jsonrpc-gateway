@@ -1,4 +1,5 @@
-FROM golang:1.12.7
+FROM golang:1.12
+ENV GOPROXY=https://athens.i.ddex.io
 WORKDIR /app
 COPY . /app
 RUN go build -o main -v -installsuffix cgo -ldflags '-s -w' .
