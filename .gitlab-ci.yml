@@ -32,3 +32,16 @@ deploy_sandbox:
     - kubectl apply -f .k8s --namespace=sandbox
   only:
     - master
+
+deploy_production:
+  tags:
+    - docker
+  image: davidqhr/k8s-kubectl:latest
+  variables:
+    KUBECONFIG: /root/.kube-hp/config
+  stage: deploy
+  script:
+    - sed -i "s~<IMAGE>~$CONTAINER_IMAGE~g" .k8s/*.yml
+    - kubectl apply -f .k8s --namespace=production
+  only:
+    - master
