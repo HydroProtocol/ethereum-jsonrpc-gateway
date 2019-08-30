@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -188,7 +189,22 @@ func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 	}
 
 	for _, url := range cfg.Upstreams {
-		rcfg.Upstreams = append(rcfg.Upstreams, newUpstream(ctx, url))
+
+		// hack, refactor this sometime
+
+		var primaryUrl string
+		var oldTrieUrl string
+
+		if strings.Contains(url, ",") {
+			urls := strings.Split(url, ",")
+			primaryUrl = urls[0]
+			oldTrieUrl = urls[1]
+		} else {
+			primaryUrl = url
+			oldTrieUrl = url
+		}
+
+		rcfg.Upstreams = append(rcfg.Upstreams, newUpstream(ctx, primaryUrl, oldTrieUrl))
 	}
 
 	if len(rcfg.Upstreams) == 0 {

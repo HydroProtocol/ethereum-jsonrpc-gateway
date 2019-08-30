@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.ddex.io/lib/monitor"
+	"github.com/sirupsen/logrus"
 	"log"
 	"os"
+	"strconv"
+	"time"
 )
 
 var TimeoutError = fmt.Errorf("timeout error")
@@ -15,6 +18,36 @@ type Request struct {
 	logger   *log.Logger
 	data     *RequestData
 	reqBytes []byte
+}
+
+func getBlockNumberRequest() *Request {
+	res, _ := newRequest([]byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix())))
+	return res
+}
+
+func (r *Request) isOldTrieRequest(currentBlockNumber int) bool {
+	method := r.data.Method
+
+	if method != "eth_call" && method != "eth_getBalance" {
+		return false
+	}
+
+	if len(r.data.Params) != 2 {
+		return false
+	}
+
+	reqBlockNumber := r.data.Params[1]
+
+	switch v := reqBlockNumber.(type) {
+	case string:
+		n, _ := strconv.ParseInt(v, 0, 64)
+		return currentBlockNumber-int(n) > 100
+	case int:
+		return currentBlockNumber-int(v) > 100
+	default:
+		logrus.Errorf("unknown blocknumber %+v", v)
+		return false
+	}
 }
 
 func newRequest(reqBodyBytes []byte) (*Request, error) {

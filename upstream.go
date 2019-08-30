@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,28 +39,56 @@ type WsUpstream struct {
 }
 
 type HttpUpstream struct {
-	ctx context.Context
-	url string
+	ctx         context.Context
+	url         string
+	oldTrieUrl  string
+	blockNumber int
 }
 
-func newUpstream(ctx context.Context, urlString string) Upstream {
+type BlockNumberResponseData struct {
+	JsonRpc string `json:"jsonrpc"`
+	ID      int64  `json:"id"`
+	Result  string `json:"result"`
+}
+
+func newUpstream(ctx context.Context, urlString string, oldTrieUrlString string) Upstream {
 	u, err := url.Parse(urlString)
 
 	if err != nil {
 		panic(err)
 	}
 
+	ou := u
+
+	if urlString != oldTrieUrlString {
+		ou, err = url.Parse(oldTrieUrlString)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	var up Upstream
+
 	if u.Scheme == "http" || u.Scheme == "https" {
-		return newHttpUpstream(ctx, u)
+		up = newHttpUpstream(ctx, u, ou)
 	} else if u.Scheme == "ws" || u.Scheme == "wss" {
-		return newWsStream(ctx, u)
+		up = newWsStream(ctx, u)
 	} else {
 		panic(fmt.Errorf("unsuportted url schema %s", u.Scheme))
 	}
+
+	return up
 }
 
 func (u *HttpUpstream) handle(request *Request) ([]byte, error) {
-	upstreamReq, _ := http.NewRequest("POST", u.url, bytes.NewReader(request.reqBytes))
+	ul := u.url
+
+	if request.isOldTrieRequest(u.blockNumber) {
+		ul = u.oldTrieUrl
+	}
+
+	upstreamReq, _ := http.NewRequest("POST", ul, bytes.NewReader(request.reqBytes))
 	upstreamReq.Header.Set("Content-Type", "application/json")
 
 	res, err := httpClient.Do(upstreamReq)
@@ -200,11 +229,37 @@ func (u *WsUpstream) runConn(ctx context.Context, conn *websocket.Conn) {
 	<-connContext.Done()
 }
 
-func newHttpUpstream(ctx context.Context, url *url.URL) *HttpUpstream {
-	return &HttpUpstream{
+func newHttpUpstream(ctx context.Context, url *url.URL, oldTrieUrl *url.URL) *HttpUpstream {
+	up := &HttpUpstream{
 		ctx: ctx,
 		url: url.String(),
 	}
+
+	if url != oldTrieUrl {
+		setBlockNumber := func() {
+			req := getBlockNumberRequest()
+			bts, _ := up.handle(req)
+
+			var res BlockNumberResponseData
+			_ = json.Unmarshal(bts, &res)
+
+			blockNumber, _ := strconv.ParseInt(res.Result, 0, 64)
+			up.blockNumber = int(blockNumber)
+
+		}
+
+		setBlockNumber()
+		logrus.Infof("start old trie http upstream, blockNumber: %d", up.blockNumber)
+
+		go func() {
+			for {
+				setBlockNumber()
+				time.Sleep(30 * time.Second)
+			}
+		}()
+	}
+
+	return up
 }
 
 func newWsStream(ctx context.Context, url *url.URL) *WsUpstream {
