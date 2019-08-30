@@ -231,8 +231,9 @@ func (u *WsUpstream) runConn(ctx context.Context, conn *websocket.Conn) {
 
 func newHttpUpstream(ctx context.Context, url *url.URL, oldTrieUrl *url.URL) *HttpUpstream {
 	up := &HttpUpstream{
-		ctx: ctx,
-		url: url.String(),
+		ctx:        ctx,
+		url:        url.String(),
+		oldTrieUrl: oldTrieUrl.String(),
 	}
 
 	if url != oldTrieUrl {
