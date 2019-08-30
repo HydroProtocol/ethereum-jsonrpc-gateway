@@ -248,7 +248,11 @@ func newHttpUpstream(ctx context.Context, url *url.URL, oldTrieUrl *url.URL) *Ht
 
 		}
 
-		setBlockNumber()
+		go func() {
+			time.Sleep(5 * time.Second)
+			setBlockNumber()
+		}()
+
 		logrus.Infof("start old trie http upstream, blockNumber: %d", up.blockNumber)
 
 		go func() {

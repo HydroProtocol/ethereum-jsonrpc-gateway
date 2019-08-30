@@ -26,6 +26,10 @@ func getBlockNumberRequest() *Request {
 }
 
 func (r *Request) isOldTrieRequest(currentBlockNumber int) bool {
+	if currentBlockNumber == 0 {
+		return false
+	}
+
 	method := r.data.Method
 
 	if method != "eth_call" && method != "eth_getBalance" {
