@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,6 +12,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 // the handle function will execute concurrently
@@ -94,12 +95,14 @@ func (u *HttpUpstream) handle(request *Request) ([]byte, error) {
 	res, err := httpClient.Do(upstreamReq)
 
 	if err != nil {
+		logrus.Errorf("http upstream client do request error: %+v", err)
 		return nil, err
 	}
 
 	bts, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
+		logrus.Errorf("http upstream io readall error: %+v", err)
 		return nil, err
 	}
 
