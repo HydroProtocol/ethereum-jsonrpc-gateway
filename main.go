@@ -4,11 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"git.ddex.io/lib/hotconfig"
-	"git.ddex.io/lib/log"
-	"git.ddex.io/lib/monitor"
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -17,13 +12,19 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"git.ddex.io/lib/hotconfig"
+	"git.ddex.io/lib/log"
+	"git.ddex.io/lib/monitor"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 var httpClient *http.Client
 
 const (
-	maxIdleConnections int = 100
-	requestTimeout     int = 5
+	maxIdleConnections int = 200
+	requestTimeout     int = 10
 )
 
 func init() {
