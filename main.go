@@ -159,6 +159,8 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	logrus.Infof("Req from %s", req.RemoteAddr)
+
 	reqBodyBytes, _ := ioutil.ReadAll(req.Body)
 	proxyRequest, err := newRequest(reqBodyBytes)
 
