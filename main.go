@@ -174,6 +174,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var isArchiveRequestText string
 	if proxyRequest.isArchiveDataRequest {
 		isArchiveRequestText = "(ArchiveData)"
+		logrus.Info(string(proxyRequest.reqBytes))
 	}
 
 	monitorRequest(proxyRequest, err == nil)
