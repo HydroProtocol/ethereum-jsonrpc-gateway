@@ -69,7 +69,7 @@ func newRequest(reqBodyBytes []byte) (*Request, error) {
 	var data RequestData
 	_ = json.Unmarshal(reqBodyBytes, &data)
 
-	logger.Printf("New, method: %s\n", data.Method)
+	//logger.Printf("New, method: %s\n", data.Method)
 	//logger.Printf("Request Body: %s\n", string(reqBodyBytes))
 
 	req := &Request{
