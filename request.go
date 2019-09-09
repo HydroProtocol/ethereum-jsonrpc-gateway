@@ -52,6 +52,10 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 
 	switch v := reqBlockNumber.(type) {
 	case string:
+		if v == "latest" || v == "pending" {
+			res = false
+			return
+		}
 		n, _ := strconv.ParseInt(v, 0, 64)
 		res = currentBlockNumber-int(n) > 100
 	case int:
