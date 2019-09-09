@@ -60,6 +60,7 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 		logrus.Errorf("unknown blocknumber %+v", v)
 		res = false
 	}
+	return
 }
 
 func newRequest(reqBodyBytes []byte) (*Request, error) {
