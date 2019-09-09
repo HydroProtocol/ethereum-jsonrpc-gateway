@@ -159,28 +159,34 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//logrus.Infof("Req from %s", req.RemoteAddr)
-
 	reqBodyBytes, _ := ioutil.ReadAll(req.Body)
 	proxyRequest, err := newRequest(reqBodyBytes)
 
 	if err != nil {
 		w.WriteHeader(500)
 		_, _ = w.Write(getErrorResponseBytes(proxyRequest.data.ID, err.Error()))
+		logrus.Errorf("Req from %s %s 500 %s", req.RemoteAddr, proxyRequest.data.Method, err.Error())
 		return
 	}
 
 	bts, err := currentRunningConfig.Strategy.handle(proxyRequest)
+
+	var isArchiveRequestText string
+	if proxyRequest.isArchiveDataRequest {
+		isArchiveRequestText = "(ArchiveData)"
+	}
 
 	monitorRequest(proxyRequest, err == nil)
 
 	if err != nil {
 		w.WriteHeader(500)
 		_, _ = w.Write(getErrorResponseBytes(proxyRequest.data.ID, err.Error()))
+		logrus.Errorf("Req%s from %s %s 500 %s", isArchiveRequestText, req.RemoteAddr, proxyRequest.data.Method, err.Error())
 		return
 	}
 
 	_, _ = w.Write(bts)
+	logrus.Infof("Req%s from %s %s 200", isArchiveRequestText, req.RemoteAddr, proxyRequest.data.Method)
 }
 
 func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {

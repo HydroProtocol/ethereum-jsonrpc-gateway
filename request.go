@@ -15,9 +15,10 @@ var TimeoutError = fmt.Errorf("timeout error")
 var AllUpstreamsFailedError = fmt.Errorf("all upstream requests are failed")
 
 type Request struct {
-	logger   *log.Logger
-	data     *RequestData
-	reqBytes []byte
+	logger               *log.Logger
+	data                 *RequestData
+	reqBytes             []byte
+	isArchiveDataRequest bool
 }
 
 func getBlockNumberRequest() *Request {
@@ -25,19 +26,26 @@ func getBlockNumberRequest() *Request {
 	return res
 }
 
-func (r *Request) isOldTrieRequest(currentBlockNumber int) bool {
+func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
+	defer func() {
+		r.isArchiveDataRequest = res
+	}()
+
 	if currentBlockNumber == 0 {
-		return false
+		res = false
+		return
 	}
 
 	method := r.data.Method
 
 	if method != "eth_call" && method != "eth_getBalance" {
-		return false
+		res = false
+		return
 	}
 
 	if len(r.data.Params) != 2 {
-		return false
+		res = false
+		return
 	}
 
 	reqBlockNumber := r.data.Params[1]
@@ -45,12 +53,12 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) bool {
 	switch v := reqBlockNumber.(type) {
 	case string:
 		n, _ := strconv.ParseInt(v, 0, 64)
-		return currentBlockNumber-int(n) > 100
+		res = currentBlockNumber-int(n) > 100
 	case int:
-		return currentBlockNumber-int(v) > 100
+		res = currentBlockNumber-int(v) > 100
 	default:
 		logrus.Errorf("unknown blocknumber %+v", v)
-		return false
+		res = false
 	}
 }
 
