@@ -36,6 +36,8 @@ deploy_sandbox_old:
 deploy_sandbox_new:
   tags:
     - docker
+  variables:
+    KUBECONFIG: /root/.kube-gcp/config
   image: davidqhr/k8s-kubectl:v1.14.6
   stage: deploy
   script:
@@ -60,6 +62,8 @@ deploy_production_old:
 deploy_production_new:
   tags:
     - docker
+  variables:
+    KUBECONFIG: /root/.kube-gcp/config
   image: davidqhr/k8s-kubectl:v1.14.6
   stage: deploy
   script:
