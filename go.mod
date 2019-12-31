@@ -9,6 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.9.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify/assert v1.2.2
 )
 
 // replace git.ddex.io/lib/hotconfig => ../lib/hotconfig
