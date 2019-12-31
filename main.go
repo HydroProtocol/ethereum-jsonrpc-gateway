@@ -147,6 +147,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if req.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
