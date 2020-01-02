@@ -25,8 +25,12 @@ type RequestData struct {
 var DecodeError = fmt.Errorf("decode error")
 var Denied = fmt.Errorf("not allowed method")
 
+func isAllowedMethod(method string) bool {
+	return currentRunningConfig.allowedMethods[method]
+}
+
 func inWhitelist(contractAddress string) bool {
-	return currentRunningConfig.allowCallContracts[strings.ToLower(contractAddress)]
+	return currentRunningConfig.allowedCallContracts[strings.ToLower(contractAddress)]
 }
 
 func isValidCall(req *RequestData) (err error) {
@@ -36,7 +40,10 @@ func isValidCall(req *RequestData) (err error) {
 		}
 	}()
 
-	// allowed methods
+	if !isAllowedMethod(req.Method) {
+		return Denied
+	}
+
 	if req.Method == "eth_getBalance" ||
 		req.Method == "eth_getTransactionReceipt" {
 		return nil

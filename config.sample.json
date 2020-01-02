@@ -1,17 +1,16 @@
 {
   "_upstreams": "support http, https, ws, wss",
-  "upstreams": [
-    "http://localhost:8545"
-  ],
+  "upstreams": ["http://localhost:8545"],
 
   "_strategy": "support NAIVE, RACE, FALLBACK",
   "strategy": "NAIVE",
 
-  "_method_limitation_enabled": "limit or not",
-  "method_limitation_enabled": false,
+  "_methodLimitationEnabled": "limit or not",
+  "methodLimitationEnabled": false,
 
-  "_contract_whitelist": "can be ignore if the limitation is not enabled",
-  "contract_whitelist": [
-    "0x..."
-  ]
+  "_allowedMethods": "can be ignore if the limitation is not enabled",
+  "allowedMethods": ["eth_getBalance"],
+
+  "_contractWhitelist": "can be ignore if the limitation is not enabled",
+  "contractWhitelist": ["0x..."]
 }

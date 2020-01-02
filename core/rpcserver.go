@@ -44,8 +44,9 @@ type Server struct{}
 type Config struct {
 	Upstreams               []string `json:"upstreams"`
 	Strategy                string   `json:"strategy"`
-	MethodLimitationEnabled bool     `json:"method_limitation_enabled"`
-	ContractWhitelist       []string `json:"contract_whitelist"`
+	MethodLimitationEnabled bool     `json:"methodLimitationEnabled"`
+	AllowedMethods          []string `json: allowedMethods`
+	ContractWhitelist       []string `json:"contractWhitelist"`
 }
 
 type RunningConfig struct {
@@ -54,7 +55,8 @@ type RunningConfig struct {
 	Upstreams               []Upstream
 	Strategy                IStrategy
 	MethodLimitationEnabled bool
-	allowCallContracts      map[string]bool
+	allowedMethods          map[string]bool
+	allowedCallContracts    map[string]bool
 }
 
 var currentRunningConfig *RunningConfig
@@ -65,14 +67,6 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // kong should take care of cors
 	},
-}
-
-// TODO
-func monitorRequest(r *Request, noError bool) {
-	if noError {
-	} else {
-	}
-
 }
 
 func (h *Server) ServerWS(conn *websocket.Conn) error {
@@ -102,8 +96,6 @@ func (h *Server) ServerWS(conn *websocket.Conn) error {
 		if err != nil {
 			bts = getErrorResponseBytes(proxyRequest.data.ID, err.Error())
 		}
-
-		monitorRequest(proxyRequest, err == nil)
 
 		if _, err := w.Write(bts); err != nil {
 			return err
@@ -173,8 +165,6 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		logrus.Info(string(proxyRequest.reqBytes))
 	}
 
-	monitorRequest(proxyRequest, err == nil)
-
 	if err != nil {
 		w.WriteHeader(500)
 		_, _ = w.Write(getErrorResponseBytes(proxyRequest.data.ID, err.Error()))
@@ -237,10 +227,14 @@ func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 		return nil, fmt.Errorf("blank of unsupported strategy: %s", cfg.Strategy)
 	}
 
-	rcfg.allowCallContracts = make(map[string]bool)
+	rcfg.allowedMethods = make(map[string]bool)
+	for i := 0; i < len(cfg.AllowedMethods); i++ {
+		rcfg.allowedMethods[cfg.AllowedMethods[i]] = true
+	}
 
+	rcfg.allowedCallContracts = make(map[string]bool)
 	for i := 0; i < len(cfg.ContractWhitelist); i++ {
-		rcfg.allowCallContracts[cfg.ContractWhitelist[i]] = true
+		rcfg.allowedCallContracts[cfg.ContractWhitelist[i]] = true
 	}
 
 	return rcfg, nil
