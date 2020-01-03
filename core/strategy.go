@@ -1,7 +1,8 @@
-package main
+package core
 
 import (
 	"fmt"
+	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
 	"github.com/sirupsen/logrus"
 	"math"
 	"strings"
@@ -77,7 +78,7 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 			resBody := strings.TrimSpace(string(bts))
 
 			//diff := time.Now().Sub(startAt)
-			if noErrorFieldInJSON(resBody) {
+			if utils.NoErrorFieldInJSON(resBody) {
 				//r.logger.Printf("%v Upstream: %v Success[%d], Body: %v\n", diff, upstream, res.StatusCode, resBody)
 				successfulResponse <- bts
 			} else {

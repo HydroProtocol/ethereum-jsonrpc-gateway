@@ -1,9 +1,9 @@
-package main
+package core
 
 import (
 	"encoding/json"
 	"fmt"
-	"git.ddex.io/lib/monitor"
+	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
 	"github.com/sirupsen/logrus"
 	"log"
 	"os"
@@ -68,7 +68,7 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 }
 
 func newRequest(reqBodyBytes []byte) (*Request, error) {
-	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", randStringRunes(8)), log.LstdFlags)
+	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", utils.RandStringRunes(8)), log.LstdFlags)
 
 	var data RequestData
 	_ = json.Unmarshal(reqBodyBytes, &data)
@@ -102,7 +102,6 @@ func (r *Request) valid() error {
 
 	if err != nil {
 		r.logger.Printf("not valid, skip\n")
-		monitor.Count("block_call", r.data.Method)
 		return err
 	}
 

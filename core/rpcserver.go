@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"context"
@@ -13,9 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"git.ddex.io/lib/hotconfig"
-	"git.ddex.io/lib/log"
-	"git.ddex.io/lib/monitor"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
@@ -70,11 +67,10 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// TODO
 func monitorRequest(r *Request, noError bool) {
 	if noError {
-		monitor.Count("call_ok", r.data.Method)
 	} else {
-		monitor.Count("call_with_error", r.data.Method)
 	}
 
 }
@@ -261,44 +257,22 @@ func waitExitSignal(ctxStop context.CancelFunc) {
 	ctxStop()
 }
 
-func run() int {
-	log.AutoSetLogLevel()
-	monitor.InitCounter("key", "method")
+func Run() int {
 
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)
 
 	config := &Config{}
 
-	if os.Getenv("KUBE_NAMESPACE") != "" {
-		logrus.Info("load config from ETCD")
-		hotconfig.Load(config, &hotconfig.Options{
-			Watch:   true,
-			Context: ctx,
-			OnChange: func() {
-				oldRunningConfig := currentRunningConfig
-				newRcfg, err := buildRunningConfigFromConfig(ctx, config)
+	logrus.Info("load config from file")
+	bts, err := ioutil.ReadFile("./config.json")
 
-				if err == nil {
-					currentRunningConfig = newRcfg
-					oldRunningConfig.stop()
-					logrus.Info("running config changes successfully")
-				} else {
-					logrus.Info("running config changes failed, err: %+v", err)
-				}
-			},
-		})
-	} else {
-		logrus.Info("load config from file")
-		bts, err := ioutil.ReadFile("./config.json")
-
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		_ = json.Unmarshal(bts, config)
+	if err != nil {
+		logrus.Fatal(err)
 	}
-	var err error
+
+	_ = json.Unmarshal(bts, config)
+
 	currentRunningConfig, err = buildRunningConfigFromConfig(ctx, config)
 
 	// test reload config
@@ -321,7 +295,7 @@ func run() int {
 		logrus.Fatal(err)
 	}
 
-	hs := &http.Server{Addr: ":3005", Handler: &Server{}}
+	httpServer := &http.Server{Addr: ":3005", Handler: &Server{}}
 
 	// http server graceful shutdown
 	go func() {
@@ -330,23 +304,17 @@ func run() int {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		if err := hs.Shutdown(shutdownCtx); err != nil {
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
 			logrus.Fatalf("Could not gracefully shutdown the server: %v\n", err)
 		}
 	}()
 
-	logrus.Infof("Listening on http://0.0.0.0%s\n", hs.Addr)
+	logrus.Infof("Listening on http://0.0.0.0%s\n", httpServer.Addr)
 
-	go monitor.StartMonitorHttpServer(ctx)
-
-	if err := hs.ListenAndServe(); err != http.ErrServerClosed {
+	if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
 		logrus.Fatal(err)
 	}
 
 	logrus.Info("Stopped")
 	return 0
-}
-
-func main() {
-	os.Exit(run())
 }

@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func randStringRunes(n int) string {
+func RandStringRunes(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
@@ -16,7 +16,7 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
-func noErrorFieldInJSON(jsonStr string) bool {
+func NoErrorFieldInJSON(jsonStr string) bool {
 	var tmp map[string]interface{}
 	err := json.Unmarshal([]byte(jsonStr), &tmp)
 
