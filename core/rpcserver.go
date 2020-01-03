@@ -45,7 +45,7 @@ type Config struct {
 	Upstreams               []string `json:"upstreams"`
 	Strategy                string   `json:"strategy"`
 	MethodLimitationEnabled bool     `json:"methodLimitationEnabled"`
-	AllowedMethods          []string `json: allowedMethods`
+	AllowedMethods          []string `json:"allowedMethods"`
 	ContractWhitelist       []string `json:"contractWhitelist"`
 }
 

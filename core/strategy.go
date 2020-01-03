@@ -2,13 +2,14 @@ package core
 
 import (
 	"fmt"
-	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
-	"github.com/sirupsen/logrus"
 	"math"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type IStrategy interface {
