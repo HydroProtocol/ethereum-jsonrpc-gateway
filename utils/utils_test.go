@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -7,11 +7,11 @@ import (
 
 func TestRandStringRunes(t *testing.T) {
 	str1 := RandStringRunes(8)
-	assert.IsType(t, string, str1)
+	assert.IsType(t, "string", str1)
 	assert.Equal(t, 8, len(str1))
 
-	str1 := RandStringRunes(64)
-	assert.IsType(t, string, str2)
+	str2 := RandStringRunes(64)
+	assert.IsType(t, "string", str2)
 	assert.Equal(t, 64, len(str2))
 }
 

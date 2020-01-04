@@ -5,6 +5,6 @@ import (
 	"testing"
 )
 
-func TestNewUpstream(t *testing.T) {
+func TestCreateHTTPClient(t *testing.T) {
 	assert.Equal(t, true, true)
 }
