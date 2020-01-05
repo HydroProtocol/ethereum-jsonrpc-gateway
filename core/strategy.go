@@ -151,7 +151,7 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 				p.currentUpstreamIndex.Store(nextUpstreamIndex)
 				p.upsteamStatus.Store(i, false)
 
-				logrus.Infof("upstream %s return err, switch to %s", index, nextUpstreamIndex)
+				logrus.Infof("upstream %d return err, switch to %d", index, nextUpstreamIndex)
 
 				go func(i int) {
 					<-time.After(5 * time.Second)

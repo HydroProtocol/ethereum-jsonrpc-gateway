@@ -2,9 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"math/rand"
-
-	"github.com/sirupsen/logrus"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -22,7 +21,7 @@ func NoErrorFieldInJSON(jsonStr string) bool {
 	err := json.Unmarshal([]byte(jsonStr), &tmp)
 
 	if err != nil {
-		logrus.Error("decode json string failed, %v, %v\n", jsonStr, err)
+		log.Printf("decode json string failed, %v, %v\n", jsonStr, err)
 		return false
 	}
 
