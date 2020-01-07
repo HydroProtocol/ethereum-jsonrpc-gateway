@@ -1,6 +1,10 @@
 # ethereum-jsonrpc-gateway
 
-A transparent ethereum jsonrpc gateway
+A transparent gateway on top of ethereum node for load-balancing, permissions checking, with multi flexible accesses.
+
+## Why this project matters?
+
+To avoid single point failure, we can use several ethereum nodes. It doesn’t guarantee all of these nodes are all available at the same time, but at least one of them will be working. It’s because we may upgrade some of the nodes regularly, or some nodes may be in a syncing state. That why we need a transparent gateway on top of these nodes. This layer gateway can temporarily get rid of the underling nodes which are not working, so the upper layer services will not notice about the unusable. This gateway also benefits load balances about rpc requests. Furthermore, we can add some permission check in the gateway layer. Only specific contracts or addresses are allowed to access and specific methods are allowed to call.
 
 ## Requirements
 
@@ -8,8 +12,8 @@ A transparent ethereum jsonrpc gateway
 
 ## Features
 
-- Methods filter
-- Smart Contract whitelist
+- Permisson check - Methods filter
+- Permisson check - Smart Contract whitelist
 - HTTP
 - HTTP upstream
 - Websocket
@@ -24,14 +28,17 @@ A transparent ethereum jsonrpc gateway
 
 - naive (require upstreams count == 1)
   Navie strategy is the most simple one without any magic.
+  <img src="./assets/strategy1.png">
 
 ### Advanced
 
 - race (require upstreams count >= 2)
   Race strategy proxy mirrors request to the all upstreams, once it receives a response for one of them, then return.
+  <img src="./assets/strategy1.png">
 
 - fallback (require upstreams count >= 2)
   Fallback strategy proxy will retry failed request in other upstreams.
+  <img src="./assets/strategy1.png">
 
 ## Getting Started
 
