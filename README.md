@@ -6,10 +6,6 @@ A transparent gateway on top of ethereum node for load-balancing, permissions ch
 
 To avoid single point failure, we can use several ethereum nodes. It doesn’t guarantee all of these nodes are all available at the same time, but at least one of them will be working. It’s because we may upgrade some of the nodes regularly, or some nodes may be in a syncing state. That why we need a transparent gateway on top of these nodes. This layer gateway can temporarily get rid of the underling nodes which are not working, so the upper layer services will not notice about the unusable. This gateway also benefits load balances about rpc requests. Furthermore, we can add some permission check in the gateway layer. Only specific contracts or addresses are allowed to access and specific methods are allowed to call.
 
-## Requirements
-
-- Go version >= 1.11
-
 ## Features
 
 - Permisson check - Methods filter
@@ -43,6 +39,8 @@ To avoid single point failure, we can use several ethereum nodes. It doesn’t g
 ## Getting Started
 
 ### Build From Source
+
+Requirements Go version >= 1.11
 
 1. Clone this repo
 2. Copy .config.sample.json to .config.json and Set valid Configuration
