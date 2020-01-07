@@ -17,6 +17,7 @@ To avoid single point failure, we can use several ethereum nodes. It doesn’t g
 - Websocket upstream reconnect
 - Hot reload configuration
 - Graceful shutdown
+- Archive data router
 
 ## Proxy Strategy
 
