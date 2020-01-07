@@ -34,11 +34,11 @@ To avoid single point failure, we can use several ethereum nodes. It doesn’t g
 
 - race (require upstreams count >= 2)
   Race strategy proxy mirrors request to the all upstreams, once it receives a response for one of them, then return.
-  <img src="./assets/strategy1.png">
+  <img src="./assets/strategy2.png">
 
 - fallback (require upstreams count >= 2)
   Fallback strategy proxy will retry failed request in other upstreams.
-  <img src="./assets/strategy1.png">
+  <img src="./assets/strategy3.png">
 
 ## Getting Started
 
