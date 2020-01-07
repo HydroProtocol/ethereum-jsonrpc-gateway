@@ -228,6 +228,8 @@ func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 		return nil, fmt.Errorf("blank of unsupported strategy: %s", cfg.Strategy)
 	}
 
+	rcfg.MethodLimitationEnabled = cfg.MethodLimitationEnabled
+
 	rcfg.allowedMethods = make(map[string]bool)
 	for i := 0; i < len(cfg.AllowedMethods); i++ {
 		rcfg.allowedMethods[cfg.AllowedMethods[i]] = true
