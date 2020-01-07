@@ -66,6 +66,24 @@ go build cmd/main.go
 docker run -t -p 3005:3005  hydroprotocolio/ethereum-jsonrpc-gateway
 ```
 
+### Use it
+
+We call `eth_blockNumber` method (When set `methodLimitationEnabled` true, or `eth_blockNumber` in `allowedMethods`)
+
+```
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://localhost:3005
+
+{"jsonrpc":"2.0","id":1,"result":"0x6c1100"}%
+```
+
+And if we set `methodLimitationEnabled` true, and `eth_blockNumber` is not in `allowedMethods`, when we call `eth_blockNumber`, gateway will deny the reqeust.
+
+```
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://localhost:3005
+
+{"error":{"code":-32602,"message":"not allowed method"},"id":1,"jsonrpc":"2.0"}%
+```
+
 ## Configuration
 
 Copy .config.sample.json to .config.json then edit .config.json
