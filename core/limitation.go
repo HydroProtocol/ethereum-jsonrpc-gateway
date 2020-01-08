@@ -2,9 +2,10 @@ package core
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
-	"strings"
 )
 
 type RequestData struct {
