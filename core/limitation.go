@@ -24,7 +24,8 @@ type RequestData struct {
 //eth_getTransactionCount
 
 var DecodeError = fmt.Errorf("decode error")
-var Denied = fmt.Errorf("not allowed method")
+var DeniedMethod = fmt.Errorf("not allowed method")
+var DeniedContract = fmt.Errorf("not allowed contract or address")
 
 func isAllowedMethod(method string) bool {
 	return currentRunningConfig.allowedMethods[method]
@@ -42,7 +43,7 @@ func isValidCall(req *RequestData) (err error) {
 	}()
 
 	if !isAllowedMethod(req.Method) {
-		return Denied
+		return DeniedMethod
 	}
 
 	if req.Method == "eth_getBalance" ||
@@ -54,7 +55,7 @@ func isValidCall(req *RequestData) (err error) {
 		to := req.Params[0].(map[string]interface{})["to"].(string)
 
 		if !inWhitelist(to) {
-			return Denied
+			return DeniedContract
 		}
 
 		return nil
@@ -79,11 +80,15 @@ func isValidCall(req *RequestData) (err error) {
 		}
 
 		if !inWhitelist(fields[3].(string)) {
-			return Denied
+			return DeniedContract
 		}
 
 		return nil
 	}
 
-	return Denied
+	if isAllowedMethod(req.Method) {
+		return nil
+	}
+
+	return DeniedContract
 }

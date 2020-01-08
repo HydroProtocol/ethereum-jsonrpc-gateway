@@ -9,7 +9,7 @@
   "methodLimitationEnabled": false,
 
   "_allowedMethods": "can be ignore if the limitation is not enabled",
-  "allowedMethods": ["eth_getBalance"],
+  "allowedMethods": ["eth_blockNumber"],
 
   "_contractWhitelist": "can be ignore if the limitation is not enabled",
   "contractWhitelist": ["0x..."]

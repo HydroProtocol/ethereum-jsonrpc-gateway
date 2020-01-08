@@ -3,12 +3,13 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
-	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
+	"github.com/sirupsen/logrus"
 )
 
 var TimeoutError = fmt.Errorf("timeout error")
@@ -59,6 +60,10 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 		n, _ := strconv.ParseInt(v, 0, 64)
 		res = currentBlockNumber-int(n) > 100
 	case int:
+		logrus.Errorf("unknown %d", currentBlockNumber)
+		res = currentBlockNumber-v > 100
+	case float64:
+		logrus.Errorf("unknown %d", currentBlockNumber)
 		res = currentBlockNumber-int(v) > 100
 	default:
 		logrus.Errorf("unknown blocknumber %+v", v)

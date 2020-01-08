@@ -237,7 +237,7 @@ func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 
 	rcfg.allowedCallContracts = make(map[string]bool)
 	for i := 0; i < len(cfg.ContractWhitelist); i++ {
-		rcfg.allowedCallContracts[cfg.ContractWhitelist[i]] = true
+		rcfg.allowedCallContracts[strings.ToLower(cfg.ContractWhitelist[i])] = true
 	}
 
 	return rcfg, nil
