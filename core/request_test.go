@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/utils"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,4 +73,63 @@ func TestIsOldTrieRequest(t *testing.T) {
 	}
 
 	assert.Equal(t, true, req4.isOldTrieRequest(10000))
+}
+
+func TestNewRequest(t *testing.T) {
+	reqBodyBytes1 := []byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix()))
+	req1, err := newRequest(reqBodyBytes1)
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	assert.Equal(t, "eth_blockNumber", req1.data.Method)
+}
+
+func TestValid(t *testing.T) {
+	var testConfigStr1 = `{
+		"_upstreams": "support http, https, ws, wss",
+		"upstreams": [
+		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
+		],
+	  
+		"_strategy": "support NAIVE, RACE, FALLBACK",
+		"strategy": "NAIVE",
+	  
+		"_methodLimitationEnabled": "limit or not",
+		"methodLimitationEnabled": false,
+	  
+		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
+		"allowedMethods": ["eth_blockNumber"],
+	  
+		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
+		"contractWhitelist": []
+	  }`
+
+	ctx := context.Background()
+
+	config := &Config{}
+
+	err := json.Unmarshal([]byte(testConfigStr1), config)
+
+	currentRunningConfig, err = buildRunningConfigFromConfig(ctx, config)
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", utils.RandStringRunes(8)), log.LstdFlags)
+
+	reqBodyBytes1 := []byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix()))
+
+	var data1 RequestData
+	_ = json.Unmarshal(reqBodyBytes1, &data1)
+
+	req1 := &Request{
+		logger:   logger,
+		data:     &data1,
+		reqBytes: reqBodyBytes1,
+	}
+
+	assert.Equal(t, nil, req1.valid())
 }

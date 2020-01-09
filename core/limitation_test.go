@@ -9,45 +9,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testConfigStr1 = `{
-	"_upstreams": "support http, https, ws, wss",
-	"upstreams": [
-	  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
-	],
-  
-	"_strategy": "support NAIVE, RACE, FALLBACK",
-	"strategy": "NAIVE",
-  
-	"_methodLimitationEnabled": "limit or not",
-	"methodLimitationEnabled": true,
-  
-	"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
-	"allowedMethods": ["eth_blockNumber"],
-  
-	"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
-	"contractWhitelist": []
-  }`
-
-var testConfigStr2 = `{
-	"_upstreams": "support http, https, ws, wss",
-	"upstreams": [
-	  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
-	],
-  
-	"_strategy": "support NAIVE, RACE, FALLBACK",
-	"strategy": "NAIVE",
-  
-	"_methodLimitationEnabled": "limit or not",
-	"methodLimitationEnabled": true,
-  
-	"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
-	"allowedMethods": ["eth_blockNumber", "eth_getBalance", "eth_call", "eth_sendRawTransaction"],
-  
-	"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
-	"contractWhitelist": ["0xc2c57336e01695D34F8012f6c0d250baB2Dd38Da"]
-  }`
-
 func TestIsAllowedMethod(t *testing.T) {
+	var testConfigStr1 = `{
+		"_upstreams": "support http, https, ws, wss",
+		"upstreams": [
+		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
+		],
+	  
+		"_strategy": "support NAIVE, RACE, FALLBACK",
+		"strategy": "NAIVE",
+	  
+		"_methodLimitationEnabled": "limit or not",
+		"methodLimitationEnabled": true,
+	  
+		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
+		"allowedMethods": ["eth_blockNumber"],
+	  
+		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
+		"contractWhitelist": []
+	  }`
+
 	ctx := context.Background()
 
 	config := &Config{}
@@ -65,6 +46,25 @@ func TestIsAllowedMethod(t *testing.T) {
 }
 
 func TestInWhitelist(t *testing.T) {
+	var testConfigStr2 = `{
+		"_upstreams": "support http, https, ws, wss",
+		"upstreams": [
+		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
+		],
+	  
+		"_strategy": "support NAIVE, RACE, FALLBACK",
+		"strategy": "NAIVE",
+	  
+		"_methodLimitationEnabled": "limit or not",
+		"methodLimitationEnabled": true,
+	  
+		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
+		"allowedMethods": ["eth_blockNumber", "eth_getBalance", "eth_call", "eth_sendRawTransaction"],
+	  
+		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
+		"contractWhitelist": ["0xc2c57336e01695D34F8012f6c0d250baB2Dd38Da"]
+	  }`
+
 	ctx := context.Background()
 
 	config := &Config{}
@@ -82,6 +82,25 @@ func TestInWhitelist(t *testing.T) {
 }
 
 func TestIsValidCall(t *testing.T) {
+	var testConfigStr2 = `{
+		"_upstreams": "support http, https, ws, wss",
+		"upstreams": [
+		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
+		],
+	  
+		"_strategy": "support NAIVE, RACE, FALLBACK",
+		"strategy": "NAIVE",
+	  
+		"_methodLimitationEnabled": "limit or not",
+		"methodLimitationEnabled": true,
+	  
+		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
+		"allowedMethods": ["eth_blockNumber", "eth_getBalance", "eth_call", "eth_sendRawTransaction"],
+	  
+		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
+		"contractWhitelist": ["0xc2c57336e01695D34F8012f6c0d250baB2Dd38Da"]
+	  }`
+
 	ctx := context.Background()
 
 	config := &Config{}
