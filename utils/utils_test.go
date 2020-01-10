@@ -7,11 +7,11 @@ import (
 
 func TestRandStringRunes(t *testing.T) {
 	str1 := RandStringRunes(8)
-	assert.IsType(t, "string", str1)
+	assert.IsType(t, "", str1)
 	assert.Equal(t, 8, len(str1))
 
 	str2 := RandStringRunes(64)
-	assert.IsType(t, "string", str2)
+	assert.IsType(t, "", str2)
 	assert.Equal(t, 64, len(str2))
 }
 
