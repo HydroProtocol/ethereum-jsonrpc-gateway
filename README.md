@@ -61,6 +61,11 @@ go build cmd/main.go
 ### Run Using Docker
 
 1. Pull the docker image
+
+```
+docker pull  hydroprotocolio/ethereum-jsonrpc-gateway
+```
+
 2. docker run
 
 ```
