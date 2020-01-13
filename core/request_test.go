@@ -112,7 +112,7 @@ func TestValid(t *testing.T) {
 
 	err := json.Unmarshal([]byte(testConfigStr1), config)
 
-	currentRunningConfig, err = buildRunningConfigFromConfig(ctx, config)
+	currentRunningConfig, err = BuildRunningConfigFromConfig(ctx, config)
 
 	if err != nil {
 		logrus.Fatal(err)

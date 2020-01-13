@@ -26,13 +26,15 @@ type RunningConfig struct {
 
 var currentRunningConfig *RunningConfig
 
-func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {
+func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {
 	ctx, stop := context.WithCancel(parentContext)
 
 	rcfg := &RunningConfig{
 		ctx:  ctx,
 		stop: stop,
 	}
+
+	currentRunningConfig = rcfg
 
 	for _, url := range cfg.Upstreams {
 
@@ -56,8 +58,6 @@ func buildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 	if len(rcfg.Upstreams) == 0 {
 		return nil, fmt.Errorf("need upstreams")
 	}
-
-	currentRunningConfig = rcfg
 
 	switch cfg.Strategy {
 	case "NAIVE":

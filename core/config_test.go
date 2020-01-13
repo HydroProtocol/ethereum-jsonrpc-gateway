@@ -33,7 +33,7 @@ func TestBuildRunningConfigFromConfigNAIVE(t *testing.T) {
 
 	err := json.Unmarshal([]byte(testConfigStr1), config)
 
-	currentRunningConfig, err := buildRunningConfigFromConfig(context.Background(), config)
+	currentRunningConfig, err := BuildRunningConfigFromConfig(context.Background(), config)
 
 	if err != nil {
 		logrus.Fatal(err)
@@ -63,7 +63,7 @@ func TestBuildRunningConfigFromConfigNAIVE(t *testing.T) {
 
 	err = json.Unmarshal([]byte(testConfigStr2), config)
 
-	assert.Panics(t, func() { buildRunningConfigFromConfig(context.Background(), config) })
+	assert.Panics(t, func() { BuildRunningConfigFromConfig(context.Background(), config) })
 }
 
 func TestBuildRunningConfigFromConfigRACE(t *testing.T) {
@@ -91,7 +91,7 @@ func TestBuildRunningConfigFromConfigRACE(t *testing.T) {
 
 	err := json.Unmarshal([]byte(testConfigStr1), config)
 
-	currentRunningConfig, err := buildRunningConfigFromConfig(context.Background(), config)
+	currentRunningConfig, err := BuildRunningConfigFromConfig(context.Background(), config)
 
 	if err != nil {
 		logrus.Fatal(err)
@@ -120,7 +120,7 @@ func TestBuildRunningConfigFromConfigRACE(t *testing.T) {
 
 	err = json.Unmarshal([]byte(testConfigStr2), config)
 
-	assert.Panics(t, func() { buildRunningConfigFromConfig(context.Background(), config) })
+	assert.Panics(t, func() { BuildRunningConfigFromConfig(context.Background(), config) })
 }
 
 func TestBuildRunningConfigFromConfigFALLBACK(t *testing.T) {
@@ -148,7 +148,7 @@ func TestBuildRunningConfigFromConfigFALLBACK(t *testing.T) {
 
 	err := json.Unmarshal([]byte(testConfigStr1), config)
 
-	currentRunningConfig, err := buildRunningConfigFromConfig(context.Background(), config)
+	currentRunningConfig, err := BuildRunningConfigFromConfig(context.Background(), config)
 
 	if err != nil {
 		logrus.Fatal(err)
@@ -177,5 +177,5 @@ func TestBuildRunningConfigFromConfigFALLBACK(t *testing.T) {
 
 	err = json.Unmarshal([]byte(testConfigStr2), config)
 
-	assert.Panics(t, func() { buildRunningConfigFromConfig(context.Background(), config) })
+	assert.Panics(t, func() { BuildRunningConfigFromConfig(context.Background(), config) })
 }
