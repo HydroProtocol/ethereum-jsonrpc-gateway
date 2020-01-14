@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -12,10 +12,14 @@ import (
 
 	"github.com/HydroProtocol/ethereum-jsonrpc-gateway/core"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	os.Exit(Run())
+var startCmd = &cobra.Command{
+	Use: "start",
+	Run: func(cmd *cobra.Command, args []string) {
+		Run()
+	},
 }
 
 func waitExitSignal(ctxStop context.CancelFunc) {

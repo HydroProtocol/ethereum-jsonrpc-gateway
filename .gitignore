@@ -5,3 +5,4 @@ bin
 .idea
 .vscode
 main
+ethereum-jsonrpc-gateway
