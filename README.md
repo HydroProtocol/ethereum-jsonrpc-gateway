@@ -1,10 +1,22 @@
 # ethereum-jsonrpc-gateway
 
-A transparent gateway on top of ethereum node for load-balancing, permissions checking, with multi flexible accesses.
+A transparent gateway on top of Ethereum nodes for load-balancing, permissions checking, with multi flexible accesses.
 
-## Why this project matters?
+## Background
 
-To avoid single point failure, we can use several ethereum nodes. It doesn’t guarantee all of these nodes are all available at the same time, but at least one of them will be working. It’s because we may upgrade some of the nodes regularly, or some nodes may be in a syncing state. That why we need a transparent gateway on top of these nodes. This layer gateway can temporarily get rid of the underling nodes which are not working, so the upper layer services will not notice about the unusable. This gateway also benefits load balances about rpc requests. Furthermore, we can add some permission check in the gateway layer. Only specific contracts or addresses are allowed to access and specific methods are allowed to call.
+Services that use the Ethereum blockchain typically need to maintain multiple [Ethereum nodes](https://docs.ethhub.io/using-ethereum/running-an-ethereum-node/) in order to interact with on-chain data. Maintaining multiple Ethereum nodes creates a vast array of complications that eth-jsonrpc-gateways helps allieviate. 
+
+Using only a single node, while simpler than running multiple, often is insufficient for practical applications (and yields a singular point of failure). Instead, using a series of multiple Ethereum nodes is a standard practice.
+
+ethereum-jsonrpc-gateway was created as a more elegant solution for Ethereum node management. Some of the complexities it addresses are:
+
+- Maintaining uptime while nodes are upgraded and synced frequently
+
+Not all nodes will be available 100% of the time, but eth-jsonrpc-gateway acts as a transparent gateway on top of these nodes: assuring that at least some of them will be available to prevent application failure.
+
+- Load balancing and permission checks are built in
+
+The gateway also acts as a load balancer across the nodes for [rpc](https://ethereumbuilders.gitbooks.io/guide/content/en/ethereum_json_rpc.html) requests. It can also choose to only accept calls from specific addresses and smart contracts.
 
 ## Features
 
@@ -21,10 +33,12 @@ To avoid single point failure, we can use several ethereum nodes. It doesn’t g
 
 ## Proxy Strategy
 
+Depending on the level of complexity needed, there are two proxy strategies for eth-jsonrpc-gateway: Basic and Advanced. The pictures below display how these different proxy methods work.
+
 ### Basic
 
 - naive (require upstreams count == 1)
-  Navie strategy is the most simple one without any magic.
+  Naive strategy is the most simple one without any magic.
   <img src="./assets/strategy1.png">
 
 ### Advanced
@@ -39,9 +53,14 @@ To avoid single point failure, we can use several ethereum nodes. It doesn’t g
 
 ## Getting Started
 
+There are two ways you can install and run eth-jsonrpc-gateway: you can build it from the source, or you can use a docker container. We'll go over both here.
+
 ### Build From Source
 
-Requirements Go version >= 1.11
+#### Requirements
+Go version >= 1.11
+
+#### Steps
 
 1. Clone this repo
 2. Copy .config.sample.json to .config.json and Set valid Configuration
@@ -72,9 +91,9 @@ docker pull  hydroprotocolio/ethereum-jsonrpc-gateway
 docker run -t -p 3005:3005  hydroprotocolio/ethereum-jsonrpc-gateway
 ```
 
-### Use it
+### Usage
 
-We call `eth_blockNumber` method (When set `methodLimitationEnabled` true, or `eth_blockNumber` in `allowedMethods`)
+We call the `eth_blockNumber` method (When set `methodLimitationEnabled` true, or `eth_blockNumber` in `allowedMethods`)
 
 ```
 curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://localhost:3005
@@ -82,7 +101,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id
 {"jsonrpc":"2.0","id":1,"result":"0x6c1100"}%
 ```
 
-And if we set `methodLimitationEnabled` true, and `eth_blockNumber` is not in `allowedMethods`, when we call `eth_blockNumber`, gateway will deny the reqeust.
+And if we set `methodLimitationEnabled` true, and `eth_blockNumber` is not in `allowedMethods`, when we call `eth_blockNumber` the gateway will deny the reqeust.
 
 ```
 curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://localhost:3005
@@ -96,7 +115,7 @@ Copy .config.sample.json to .config.json then edit .config.json
 
 ### upstreams
 
-Support http, https, ws, wss.
+Supports http, https, ws, wss.
 eg.
 
 ```
