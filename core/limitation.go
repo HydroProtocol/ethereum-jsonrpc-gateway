@@ -15,13 +15,13 @@ type RequestData struct {
 	Params  []interface{} `json:"params"`
 }
 
-//eth_call
-//eth_estimateGas
-//eth_getLogs
-//eth_getBalance
-//eth_getCode
-//eth_getStorageAt
-//eth_getTransactionCount
+// eth_call
+// eth_estimateGas
+// eth_getLogs
+// eth_getBalance
+// eth_getCode
+// eth_getStorageAt
+// eth_getTransactionCount
 
 var DecodeError = fmt.Errorf("decode error")
 var DeniedMethod = fmt.Errorf("not allowed method")

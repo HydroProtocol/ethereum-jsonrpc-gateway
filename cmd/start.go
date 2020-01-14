@@ -18,7 +18,7 @@ import (
 var startCmd = &cobra.Command{
 	Use: "start",
 	Run: func(cmd *cobra.Command, args []string) {
-		Run()
+		os.Exit(Run())
 	},
 }
 
@@ -50,22 +50,6 @@ func Run() int {
 	_ = json.Unmarshal(bts, config)
 
 	_, err = core.BuildRunningConfigFromConfig(ctx, config)
-
-	// test reload config
-	//go func() {
-	//	time.Sleep(5 * time.Second)
-	//
-	//	oldRunningConfig := currentRunningConfig
-	//	newRcfg, err := BuildRunningConfigFromConfig(ctx, config)
-	//
-	//	if err == nil {
-	//		currentRunningConfig = newRcfg
-	//		oldRunningConfig.stop()
-	//		logrus.Info("running config changes successfully")
-	//	} else {
-	//		logrus.Info("running config changes failed, err: %+v", err)
-	//	}
-	//}()
 
 	if err != nil {
 		logrus.Fatal(err)

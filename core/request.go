@@ -3,8 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -16,7 +14,7 @@ var TimeoutError = fmt.Errorf("timeout error")
 var AllUpstreamsFailedError = fmt.Errorf("all upstream requests are failed")
 
 type Request struct {
-	logger               *log.Logger
+	logger               *logrus.Entry
 	data                 *RequestData
 	reqBytes             []byte
 	isArchiveDataRequest bool
@@ -73,13 +71,13 @@ func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 }
 
 func newRequest(reqBodyBytes []byte) (*Request, error) {
-	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", utils.RandStringRunes(8)), log.LstdFlags)
+	logger := logrus.WithFields(logrus.Fields{"request_id": utils.RandStringRunes(8)})
 
 	var data RequestData
 	_ = json.Unmarshal(reqBodyBytes, &data)
 
-	//logger.Printf("New, method: %s\n", data.Method)
-	//logger.Printf("Request Body: %s\n", string(reqBodyBytes))
+	logger.Debugf("New, method: %s\n", data.Method)
+	logger.Debugf("Request Body: %s\n", string(reqBodyBytes))
 
 	req := &Request{
 		logger:   logger,

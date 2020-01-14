@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"testing"
 	"time"
 
@@ -20,7 +18,7 @@ func TestGetBlockNumberRequest(t *testing.T) {
 }
 
 func TestIsOldTrieRequest(t *testing.T) {
-	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", utils.RandStringRunes(8)), log.LstdFlags)
+	logger := logrus.WithFields(logrus.Fields{"request_id": utils.RandStringRunes(8)})
 
 	reqBodyBytes1 := []byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix()))
 
@@ -118,7 +116,7 @@ func TestValid(t *testing.T) {
 		logrus.Fatal(err)
 	}
 
-	logger := log.New(os.Stdout, fmt.Sprintf("[id: %v] ", utils.RandStringRunes(8)), log.LstdFlags)
+	logger := logrus.WithFields(logrus.Fields{"request_id": utils.RandStringRunes(8)})
 
 	reqBodyBytes1 := []byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix()))
 
