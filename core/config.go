@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	Upstreams               []string `json:"upstreams"`
+	OldTrieUrl              string   `json:"oldTrieUrl"`
 	Strategy                string   `json:"strategy"`
 	MethodLimitationEnabled bool     `json:"methodLimitationEnabled"`
 	AllowedMethods          []string `json:"allowedMethods"`
@@ -38,15 +39,12 @@ func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 
 	for _, url := range cfg.Upstreams {
 
-		// hack, refactor this sometime
-
 		var primaryUrl string
 		var oldTrieUrl string
 
-		if strings.Contains(url, ",") {
-			urls := strings.Split(url, ",")
-			primaryUrl = urls[0]
-			oldTrieUrl = urls[1]
+		if cfg.OldTrieUrl != "" {
+			primaryUrl = url
+			oldTrieUrl = cfg.OldTrieUrl
 		} else {
 			primaryUrl = url
 			oldTrieUrl = url

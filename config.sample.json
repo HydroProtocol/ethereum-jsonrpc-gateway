@@ -2,6 +2,9 @@
   "_upstreams": "support http, https, ws, wss",
   "upstreams": ["http://localhost:8545"],
 
+  "_oldTrieUrl": "for archive data, support http, https, or set empty string",
+  "oldTrieUrl": "",
+
   "_strategy": "support NAIVE, RACE, FALLBACK",
   "strategy": "NAIVE",
 
