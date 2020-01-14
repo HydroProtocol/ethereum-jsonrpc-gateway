@@ -4,7 +4,7 @@ A transparent gateway on top of Ethereum nodes for load-balancing, permissions c
 
 ## Background
 
-Services that use the Ethereum blockchain typically need to maintain multiple [Ethereum nodes](https://docs.ethhub.io/using-ethereum/running-an-ethereum-node/) in order to interact with on-chain data. Maintaining multiple Ethereum nodes creates a vast array of complications that eth-jsonrpc-gateways helps allieviate. 
+Services that use the Ethereum blockchain typically need to maintain multiple [Ethereum nodes](https://docs.ethhub.io/using-ethereum/running-an-ethereum-node/) in order to interact with on-chain data. Maintaining multiple Ethereum nodes creates a vast array of complications that eth-jsonrpc-gateways helps allieviate.
 
 Using only a single node, while simpler than running multiple, often is insufficient for practical applications (and yields a singular point of failure). Instead, using a series of multiple Ethereum nodes is a standard practice.
 
@@ -58,6 +58,7 @@ There are two ways you can install and run eth-jsonrpc-gateway: you can build it
 ### Build From Source
 
 #### Requirements
+
 Go version >= 1.11
 
 #### Steps
@@ -73,8 +74,8 @@ go mod download
 4. Run
 
 ```
-go build cmd/main.go
-./main # Started on port 3005
+go build .
+./ethereum-jsonrpc-gateway start     # Started on port 3005
 ```
 
 ### Run Using Docker
