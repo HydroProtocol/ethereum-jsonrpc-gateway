@@ -44,10 +44,10 @@ func newRaceProxy() *RaceProxy {
 }
 
 func (p *RaceProxy) handle(req *Request) ([]byte, error) {
-	//startAt := time.Now()
+	startAt := time.Now()
 
 	defer func() {
-		//utils.Monitor.MonitorTime("geth_gateway", float64(time.Since(startAt)) / 1000000)
+		logrus.Debugf("geth_gateway %f", float64(time.Since(startAt))/1000000)
 	}()
 
 	successfulResponse := make(chan []byte, len(currentRunningConfig.Upstreams))
@@ -58,32 +58,27 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 		go func(upstream Upstream) {
 			defer func() {
 				if err := recover(); err != nil {
-					//r.logger.Printf("%v Upstream %s failed, err: %v\n", time.Now().Sub(startAt), upstream, err)
+					req.logger.Debugf("%v Upstream %s failed, err: %v\n", time.Now().Sub(startAt), upstream, err)
 					errorResponseUpstreams <- upstream
 				}
 			}()
 
-			//upstreamReq, _ := http.NewRequest("POST", upstream, bytes.NewReader(r.req))
-			//upstreamReq.Header.Set("Content-Type", "application/json")
-
-			//res, err := httpClient.Do(upstreamReq)
-
 			bts, err := upstream.handle(req)
 
 			if err != nil {
-				//r.logger.Printf("%vms Upstream: %v, Error: %v\n", time.Now().Sub(startAt), upstream, err)
+				req.logger.Debugf("%vms Upstream: %v, Error: %v\n", time.Now().Sub(startAt), upstream, err)
 				failedResponse <- nil
 				return
 			}
 
 			resBody := strings.TrimSpace(string(bts))
 
-			//diff := time.Now().Sub(startAt)
+			diff := time.Now().Sub(startAt)
 			if utils.NoErrorFieldInJSON(resBody) {
-				//r.logger.Printf("%v Upstream: %v Success[%d], Body: %v\n", diff, upstream, res.StatusCode, resBody)
+				req.logger.Debugf("%v Upstream: %v Success, Body: %v\n", diff, upstream, resBody)
 				successfulResponse <- bts
 			} else {
-				//r.logger.Printf("%v Upstream: %v Failed[%d], Body: %v\n", diff, upstream, res.StatusCode, resBody)
+				req.logger.Debugf("%v Upstream: %v Failed, Body: %v\n", diff, upstream, resBody)
 				failedResponse <- bts
 			}
 		}(upstream)
@@ -94,12 +89,10 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 	for errorCount < len(currentRunningConfig.Upstreams) {
 		select {
 		case <-time.After(time.Second * 10):
-			//r.rw.WriteHeader(504)
-			//r.logger.Printf("%v Final Timeout\n", time.Now().Sub(startAt))
+			req.logger.Debugf("%v Final Timeout\n", time.Now().Sub(startAt))
 			return nil, TimeoutError
 		case res := <-successfulResponse:
-			//r.pipeHttpRes(res)
-			//r.logger.Printf("%v Final Success\n", time.Now().Sub(startAt))
+			req.logger.Debugf("%v Final Success\n", time.Now().Sub(startAt))
 			return res, nil
 		case res := <-failedResponse:
 			return res, nil
@@ -108,10 +101,10 @@ func (p *RaceProxy) handle(req *Request) ([]byte, error) {
 		}
 	}
 
-	//r.pipeHttpRes(failedResponses[0])
-	//r.logger.Printf("%v Final Failed\n", time.Now().Sub(startAt))
+	req.logger.Errorf("%v Final Failed\n", time.Now().Sub(startAt))
 
-	//utils.Monitor.MonitorCount("geth_gateway_fail")
+	logrus.Errorf("geth_gateway_fail")
+
 	return nil, AllUpstreamsFailedError
 }
 
