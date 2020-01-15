@@ -7,7 +7,9 @@ FROM alpine
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/ethereum-jsonrpc-gateway /app/ethereum-jsonrpc-gateway
-COPY --from=builder /app/config.json /app/config.json
+# COPY --from=builder /app/config.json /app/config.json
+WORKDIR /app
 RUN addgroup -S appuser && adduser -S -G appuser appuser
 USER appuser
-CMD ["/app/ethereum-jsonrpc-gateway", "start"]
+ENTRYPOINT [ "/app/ethereum-jsonrpc-gateway" ]
+CMD [ "start" ]

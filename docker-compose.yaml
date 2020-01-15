@@ -1,0 +1,9 @@
+version: "3"
+services:
+  ethereum-jsonrpc-gateway:
+    image: hydroprotocolio/ethereum-jsonrpc-gateway:latest
+    container_name: ethereum-jsonrpc-gateway
+    ports:
+      - 127.0.0.1:3005:3005
+    environment:
+      - DOCKER_MODE=1
