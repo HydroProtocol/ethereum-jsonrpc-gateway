@@ -176,4 +176,13 @@ func TestIsValidCall(t *testing.T) {
 	}
 
 	assert.Equal(t, nil, isValidCall(requestData7))
+
+	requestData8 := &RequestData{
+		JsonRpc: "2.0",
+		ID:      1,
+		Method:  "eth_sendRawTransaction",
+		Params:  []interface{}{`0xffffffffffffffffffffffffffffffffffff`},
+	}
+
+	assert.Equal(t, DecodeError, isValidCall(requestData8))
 }
