@@ -41,7 +41,7 @@ Go version >= 1.11
 #### Steps
 
 1. Clone this repo
-2. Copy .config.sample.json to .config.json and Set valid Configuration
+2. Copy .config.sample.json to .config.json and set valid configuration. [Learn More](#configuration) about configuration
 3. Install the dependencies:
 
 ```
@@ -58,7 +58,7 @@ go build .
 ### Run Using Docker
 
 1. Clone this repo
-2. Copy .config.sample.json to .config.json and Set valid Configuration
+2. Copy .config.sample.json to .config.json and set valid configuration. [Learn More](#configuration) about configuration
 3. docker run
 
 ```
