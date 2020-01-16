@@ -31,26 +31,6 @@ The gateway also acts as a load balancer across the nodes for [rpc](https://ethe
 - Graceful shutdown
 - Archive data router
 
-## Proxy Strategy
-
-Depending on the level of complexity needed, there are two proxy strategies for eth-jsonrpc-gateway: Basic and Advanced. The pictures below display how these different proxy methods work.
-
-### Basic
-
-- naive (require upstreams count == 1)
-  Naive strategy is the most simple one without any magic.
-  <img src="./assets/strategy1.png">
-
-### Advanced
-
-- race (require upstreams count >= 2)
-  Race strategy proxy mirrors request to the all upstreams, once it receives a response for one of them, then return.
-  <img src="./assets/strategy2.png">
-
-- fallback (require upstreams count >= 2)
-  Fallback strategy proxy will retry failed request in other upstreams.
-  <img src="./assets/strategy3.png">
-
 ## Getting Started
 
 There are two ways you can install and run eth-jsonrpc-gateway: you can build it from the source, or you can use a docker container. We'll go over both here.
@@ -80,16 +60,13 @@ go build .
 
 ### Run Using Docker
 
-1. Pull the docker image
+1. Clone this repo
+2. Copy .config.sample.json to .config.json and Set valid Configuration
+3. docker run
 
 ```
-docker pull  hydroprotocolio/ethereum-jsonrpc-gateway
-```
-
-2. docker run
-
-```
-docker run -t -p 3005:3005  hydroprotocolio/ethereum-jsonrpc-gateway
+chmod +x docker-run.sh
+./docker-run.sh
 ```
 
 ### Usage
@@ -160,6 +137,26 @@ Contract Whitelist, Can be ignored when set `methodLimitationEnabled` false
 ```
   "contractWhitelist": ["0x..."]
 ```
+
+## Proxy Strategy
+
+Depending on the level of complexity needed, there are two proxy strategies for eth-jsonrpc-gateway: Basic and Advanced. The pictures below display how these different proxy methods work.
+
+### Basic
+
+- naive (require upstreams count == 1)
+  Naive strategy is the most simple one without any magic.
+  <img src="./assets/strategy1.png">
+
+### Advanced
+
+- race (require upstreams count >= 2)
+  Race strategy proxy mirrors request to the all upstreams, once it receives a response for one of them, then return.
+  <img src="./assets/strategy2.png">
+
+- fallback (require upstreams count >= 2)
+  Fallback strategy proxy will retry failed request in other upstreams.
+  <img src="./assets/strategy3.png">
 
 ## Contributing
 
