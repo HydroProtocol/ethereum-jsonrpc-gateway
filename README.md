@@ -25,7 +25,7 @@ The gateway also acts as a load balancer across the nodes for [rpc](https://ethe
 - HTTP
 - HTTP upstream
 - Websocket
-- Websocket rpstream
+- Websocket upstream
 - Websocket upstream reconnect
 - Hot reload configuration
 - Graceful shutdown
