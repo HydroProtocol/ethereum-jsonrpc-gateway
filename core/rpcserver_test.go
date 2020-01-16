@@ -14,5 +14,5 @@ func TestCreateHTTPClient(t *testing.T) {
 func TestGetErrorResponseBytes(t *testing.T) {
 	bts := getErrorResponseBytes(1, "test msg")
 
-	assert.IsType(t, "{\"error\":{\"code\":-32602,\"message\":\"test msg\"},\"id\":1,\"jsonrpc\":\"2.0\"}", string(bts))
+	assert.Equal(t, "{\"error\":{\"code\":-32602,\"message\":\"test msg\"},\"id\":1,\"jsonrpc\":\"2.0\"}", string(bts))
 }
