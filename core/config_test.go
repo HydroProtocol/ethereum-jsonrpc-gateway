@@ -239,5 +239,7 @@ func TestBuildRunningConfigFromConfigOldTreeUrl(t *testing.T) {
 
 	err = json.Unmarshal([]byte(testConfigStr2), config)
 
+	currentRunningConfig, err = BuildRunningConfigFromConfig(context.Background(), config)
+
 	assert.Equal(t, "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707x", config.OldTrieUrl)
 }

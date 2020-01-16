@@ -148,4 +148,32 @@ func TestIsValidCall(t *testing.T) {
 	}
 
 	assert.Equal(t, DecodeError, isValidCall(requestData4))
+
+	requestData5 := &RequestData{
+		JsonRpc: "2.0",
+		ID:      1,
+		Method:  "eth_blockNumber_test",
+		Params:  nil,
+	}
+
+	assert.Equal(t, DeniedMethod, isValidCall(requestData5))
+
+	requestData6 := &RequestData{
+		JsonRpc: "2.0",
+		ID:      1,
+		Method:  "eth_call",
+		Params:  []interface{}{map[string]interface{}{"to": "0xc2c57336e01695D34F8012f6c0d250baB2Dd38Dd"}},
+	}
+
+	// to := requestData6.Params[0].(map[string]interface{})["to"].(string)
+	assert.Equal(t, DeniedContract, isValidCall(requestData6))
+
+	requestData7 := &RequestData{
+		JsonRpc: "2.0",
+		ID:      1,
+		Method:  "eth_call",
+		Params:  []interface{}{map[string]interface{}{"to": "0xc2c57336e01695D34F8012f6c0d250baB2Dd38Da"}},
+	}
+
+	assert.Equal(t, nil, isValidCall(requestData7))
 }
