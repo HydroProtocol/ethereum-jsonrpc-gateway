@@ -105,12 +105,13 @@ eg.
 ### strategy
 
 Support NAIVE, RACE, FALLBACK
-Learn More about the Proxy Strategy
 eg.
 
 ```
   "strategy": "NAIVE"
 ```
+
+[Learn More](proxy-strategys) about the Proxy Strategy
 
 ### methodLimitationEnabled
 
