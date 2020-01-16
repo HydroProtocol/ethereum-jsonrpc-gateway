@@ -111,7 +111,7 @@ eg.
   "strategy": "NAIVE"
 ```
 
-[Learn More](proxy-strategy) about the Proxy Strategy
+[Learn More](#proxy-strategy) about the Proxy Strategy
 
 ### methodLimitationEnabled
 
