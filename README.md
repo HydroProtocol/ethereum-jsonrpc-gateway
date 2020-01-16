@@ -22,11 +22,8 @@ The gateway also acts as a load balancer across the nodes for [rpc](https://ethe
 
 - Permisson check - Methods filter
 - Permisson check - Smart Contract whitelist
-- HTTP
-- HTTP upstream
-- Websocket
-- Websocket upstream
-- Websocket upstream reconnect
+- HTTP and Websocket connection
+- Server proxy strategies
 - Hot reload configuration
 - Graceful shutdown
 - Archive data router
