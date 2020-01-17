@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,22 +30,53 @@ type RunningConfig struct {
 	allowedCallContracts    map[string]bool
 }
 
+var currentConfigString string = ""
 var currentRunningConfig *RunningConfig
 
-func LoadConfig(ctx context.Context) error {
-	config := &Config{}
+func LoadConfig(ctx context.Context, quit chan bool) {
 
-	logrus.Info("load config from file")
-	bts, err := ioutil.ReadFile("./config.json")
+	ticker := time.NewTicker(3 * time.Second)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				config := &Config{}
 
-	if err != nil {
-		logrus.Fatal(err)
-	}
+				logrus.Debugf("load config from file")
+				bts, err := ioutil.ReadFile("./config.json")
 
-	_ = json.Unmarshal(bts, config)
+				if err != nil {
+					if currentConfigString == "" {
+						logrus.Fatal(err)
+					} else {
+						logrus.Warn("hot read config err, use old config")
+						continue
+					}
+				}
 
-	currentRunningConfig, err = BuildRunningConfigFromConfig(ctx, config)
-	return err
+				if string(bts) != currentConfigString {
+					_ = json.Unmarshal(bts, config)
+
+					currentRunningConfig, err = BuildRunningConfigFromConfig(ctx, config)
+
+					if err != nil {
+						if currentConfigString == "" {
+							logrus.Fatal(err)
+						} else {
+							logrus.Warn("hot build config err, use old config")
+							continue
+						}
+					}
+
+					currentConfigString = string(bts)
+				}
+			case <-quit:
+				logrus.Info("quit loop config")
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {

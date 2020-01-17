@@ -36,17 +36,15 @@ func Run() int {
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)
 
-	err := core.LoadConfig(ctx)
-
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	quitLoopConfig := make(chan bool)
+	core.LoadConfig(ctx, quitLoopConfig)
 
 	httpServer := &http.Server{Addr: ":3005", Handler: &core.Server{}}
 
 	// http server graceful shutdown
 	go func() {
 		<-ctx.Done()
+		quitLoopConfig <- true
 
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
