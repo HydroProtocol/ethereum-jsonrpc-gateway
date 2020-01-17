@@ -2,8 +2,12 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
@@ -26,6 +30,22 @@ type RunningConfig struct {
 }
 
 var currentRunningConfig *RunningConfig
+
+func LoadConfig(ctx context.Context) error {
+	config := &Config{}
+
+	logrus.Info("load config from file")
+	bts, err := ioutil.ReadFile("./config.json")
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	_ = json.Unmarshal(bts, config)
+
+	currentRunningConfig, err = BuildRunningConfigFromConfig(ctx, config)
+	return err
+}
 
 func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*RunningConfig, error) {
 	ctx, stop := context.WithCancel(parentContext)

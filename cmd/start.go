@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,18 +36,7 @@ func Run() int {
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)
 
-	config := &core.Config{}
-
-	logrus.Info("load config from file")
-	bts, err := ioutil.ReadFile("./config.json")
-
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	_ = json.Unmarshal(bts, config)
-
-	_, err = core.BuildRunningConfigFromConfig(ctx, config)
+	err := core.LoadConfig(ctx)
 
 	if err != nil {
 		logrus.Fatal(err)
