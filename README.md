@@ -1,6 +1,6 @@
 # ethereum-jsonrpc-gateway
 
-A transparent gateway on top of Ethereum nodes for load-balancing, permissions checking, with multi flexible accesses.
+A transparent gateway on top of Ethereum nodes for load-balancing, permissions checking.
 
 ## Background
 
@@ -20,13 +20,13 @@ The gateway also acts as a load balancer across the nodes for [rpc](https://ethe
 
 ## Features
 
-- Permisson check - Methods filter
-- Permisson check - Smart Contract whitelist
-- HTTP and Websocket connection
-- Server proxy strategies
-- Hot reload configuration
-- Graceful shutdown
-- Archive data router
+- Permisson check - Methods filter. You can set allowed methods in configuration, and only allowed methods can be called.
+- Permisson check - Smart Contract whitelist. Contracts only in this whitelist can be called.
+- HTTP and Websocket connection. Support http, http upstream, websocket, websocket upstream and websocket reconnection.
+- Server proxy strategies. There are three strategies you can choose: NAIVE, RACE, and FALLBACK.
+- Hot reload configuration. When change the configuration, you don't need restart the server, it will auto load the configuration.
+- Graceful shutdown. When receive shutdown signal, it will shutdown gracefully after handle current requests without bad responses.
+- Archive data router. Gateway will choose an archive node can serve API request for certain RPC methods older than 128 blocks.
 
 ## Getting Started
 
@@ -90,7 +90,7 @@ Copy .config.sample.json to .config.json then edit .config.json
 
 ### upstreams
 
-Supports http, https, ws, wss.
+Ethereum node upstream urls. You can set multiple nodes in this list. And upstream support http, https, ws, wss.
 eg.
 
 ```
@@ -99,20 +99,28 @@ eg.
   ]
 ```
 
+### oldTrieUrl
+
+This field is for Archive Data. If you set `oldTrieUrl`, Gateway will route Archive Data to this url. If you are interested in inspecting historical data (data outside of the most recent 128 blocks), your request requires access to archive data.
+[Learn More](https://infura.io/docs/ethereum/add-ons/archiveData) about Archive Data.
+eg.
+
+```
+  "oldTrieUrl": "https://example2.com/api/v1",
+```
+
 ### strategy
 
-Support NAIVE, RACE, FALLBACK
+There are three strategies: NAIVE, RACE, FALLBACK. [Learn More](#proxy-strategy) about the Proxy Strategy.
 eg.
 
 ```
   "strategy": "NAIVE"
 ```
 
-[Learn More](#proxy-strategy) about the Proxy Strategy
-
 ### methodLimitationEnabled
 
-ture or false, if set false will ignore `allowedMethods` and `contractWhitelist`.
+This field is about wether enabled the method limitation. The value of this field can be ture or false, if set false will ignore `allowedMethods` and `contractWhitelist`.
 eg.
 
 ```
@@ -121,7 +129,7 @@ eg.
 
 ### allowedMethods
 
-Allowed call methods, Can be ignored when set `methodLimitationEnabled` false
+Allowed call methods, If `methodLimitationEnabled` is true, only methods in this list can be called. Can be ignored when set `methodLimitationEnabled` false.
 eg.
 
 ```
@@ -130,7 +138,7 @@ eg.
 
 ### contractWhitelist
 
-Contract Whitelist, Can be ignored when set `methodLimitationEnabled` false
+Contract Whitelist,I f `methodLimitationEnabled` is true, only contract in in this whitelist can be called. Can be ignored when set `methodLimitationEnabled` false
 
 ```
   "contractWhitelist": ["0x..."]
@@ -138,21 +146,23 @@ Contract Whitelist, Can be ignored when set `methodLimitationEnabled` false
 
 ## Proxy Strategy
 
-Depending on the level of complexity needed, there are two proxy strategies for eth-jsonrpc-gateway: Basic and Advanced. The pictures below display how these different proxy methods work.
+Depending on the level of complexity needed, there are three proxy strategies for eth-jsonrpc-gateway: Naive, Race and Fallback. The pictures below display how these different proxy methods work.
 
-### Basic
+### Naive
 
-- naive (require upstreams count == 1)
+- Naive require upstreams count == 1
   Naive strategy is the most simple one without any magic.
   <img src="./assets/strategy1.png">
 
-### Advanced
+### Race
 
-- race (require upstreams count >= 2)
+- Race require upstreams count >= 2
   Race strategy proxy mirrors request to the all upstreams, once it receives a response for one of them, then return.
   <img src="./assets/strategy2.png">
 
-- fallback (require upstreams count >= 2)
+### Fallback
+
+- Fallback require upstreams count >= 2
   Fallback strategy proxy will retry failed request in other upstreams.
   <img src="./assets/strategy3.png">
 
