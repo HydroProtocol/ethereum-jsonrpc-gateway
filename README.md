@@ -106,7 +106,7 @@ eg.
 
 ### oldTrieUrl
 
-This field is for Archive Data. If you set `oldTrieUrl`, Gateway will route Archive Data to this url. If you are interested in inspecting historical data (data outside of the most recent 128 blocks), your request requires access to archive data.
+This field is for Archive Data. If you set `oldTrieUrl`, Gateway will route Archive Data to this url. An archive node is a simplified way of identifying an Ethereum full node running in archive mode. If you are interested in inspecting historical data (data outside of the most recent 128 blocks), your request requires access to archive data.
 [Learn More](https://infura.io/docs/ethereum/add-ons/archiveData) about Archive Data.
 eg.
 
