@@ -40,13 +40,13 @@ func TestNewHttpUpstream(t *testing.T) {
 }
 
 func TestHttpHandle(t *testing.T) {
-	url1, err := url.Parse("http://test1.com")
+	url1, err := url.Parse("https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707")
 
 	if err != nil {
 		panic(err)
 	}
 
-	url2, err := url.Parse("http://test2.com")
+	url2, err := url.Parse("https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707")
 
 	if err != nil {
 		panic(err)
