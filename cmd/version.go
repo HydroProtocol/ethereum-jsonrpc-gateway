@@ -9,6 +9,6 @@ import (
 var versionCmd = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ethereum-jsonrpc-gateway v0.0.1")
+		fmt.Println("ethereum-jsonrpc-gateway v0.1.0")
 	},
 }
