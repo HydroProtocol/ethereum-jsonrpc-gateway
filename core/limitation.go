@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -79,7 +80,18 @@ func isValidCall(req *RequestData) (err error) {
 			return DecodeError
 		}
 
-		if !inWhitelist(fields[3].(string)) {
+		var contractAddress string
+
+		switch address := fields[3].(type) {
+		case string:
+			contractAddress = address
+		case []byte:
+			contractAddress = "0x" + hex.EncodeToString(address)
+		default:
+			return DecodeError
+		}
+
+		if !inWhitelist(contractAddress) {
 			return DeniedContract
 		}
 
