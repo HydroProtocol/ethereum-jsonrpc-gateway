@@ -119,9 +119,11 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(400)
 		_, _ = w.Write([]byte("Method Should Be POST"))
+		Count("bad_request")
 		return
 	}
 
+	startTime := time.Now()
 	reqBodyBytes, _ := ioutil.ReadAll(req.Body)
 	proxyRequest, err := newRequest(reqBodyBytes)
 
@@ -131,6 +133,14 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		logrus.Errorf("Req from %s %s 500 %s", req.RemoteAddr, proxyRequest.data.Method, err.Error())
 		return
 	}
+
+	defer func(){
+		costInMs := time.Since(startTime).Nanoseconds() / 1000000
+		if costInMs > 5000 {
+			logrus.Info("slow request, method: %s, cost: %d", proxyRequest.data.Method, costInMs)
+		}
+		Time(proxyRequest.data.Method, float64(costInMs))
+	}()
 
 	bts, err := currentRunningConfig.Strategy.handle(proxyRequest)
 
