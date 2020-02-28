@@ -39,6 +39,7 @@ func Run() int {
 	quitLoopConfig := make(chan bool)
 	core.LoadConfig(ctx, quitLoopConfig)
 
+	go core.StartMonitorHttpServer(ctx)
 	httpServer := &http.Server{Addr: ":3005", Handler: &core.Server{}}
 
 	// http server graceful shutdown
