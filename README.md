@@ -46,7 +46,7 @@ Go version >= 1.11
 #### Steps
 
 1. Clone this repo
-2. Copy .config.sample.json to .config.json and set valid configuration. [Learn More](#configuration) about configuration
+2. Copy `.config.sample.jso`n to `.config.json` and set valid configuration. [Learn More](#configuration) about configuration
 3. Install the dependencies:
 
 ```
