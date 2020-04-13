@@ -63,7 +63,7 @@ go build .
 ### Run Using Docker
 
 1. Clone this repo
-2. Copy .config.sample.json to .config.json and set valid configuration. [Learn More](#configuration) about configuration
+2. Copy `.config.sample.json` to `.config.json` and set valid configuration. [Learn More](#configuration) about configuration
 3. docker run
 
 ```
@@ -91,7 +91,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id
 
 ## Configuration
 
-Copy .config.sample.json to .config.json then edit .config.json
+Copy `.config.sample.json` to `.config.json` then edit `.config.json`
 
 ### upstreams
 
@@ -116,7 +116,7 @@ eg.
 
 ### strategy
 
-There are three strategies: NAIVE, RACE, FALLBACK. [Learn More](#proxy-strategy) about the Proxy Strategy.
+There are three strategies: `NAIVE`, `RACE`, `FALLBACK`. [Learn More](#proxy-strategy) about the Proxy Strategy.
 eg.
 
 ```
@@ -151,7 +151,7 @@ Contract Whitelist,I f `methodLimitationEnabled` is true, only contract in in th
 
 ## Proxy Strategy
 
-Depending on the level of complexity needed, there are three proxy strategies for eth-jsonrpc-gateway: Naive, Race and Fallback. The pictures below display how these different proxy methods work.
+Depending on the level of complexity needed, there are three proxy strategies for eth-jsonrpc-gateway: `Naive`, `Race` and `Fallback`. The pictures below display how these different proxy methods work.
 
 ### Naive
 
